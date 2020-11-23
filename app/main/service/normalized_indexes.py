@@ -6,6 +6,9 @@ import numpy as np
 import gdal
 from affine import Affine
 from pyproj import Transformer
+import json
+
+from ..model import models
 
 satellite_extensions = {
     'sentinel': '.jp2',
@@ -104,3 +107,28 @@ class NormalizedDifferenceIndex:
 
         transformer = Transformer.from_crs("epsg:32720", "epsg:4326")
         return transformer.transform(transform_matrix[2], transform_matrix[5])
+
+class InitInformation:
+    def __init__(self, file_name):
+        self.file_name = file_name
+
+    def _init_ndvi(self):
+        """
+        Returns a NormalizedDifferenceIndex instance
+        """
+        #TODO paramentrizar el nombre del sate como se hizo en la clase de arriba
+        return NormalizedDifferenceIndex(self.file_name, 'sentinel')
+
+    def _init_satellite_image(self):
+        ndvi_instance = self._init_ndvi()
+
+        #TODO parametrizar fecha, tag, etc (estos sólo son datos de prueba)
+        date_time = '2012-04-23T18:25:43.511Z'
+        geographicInformation = models.GeographicInformation('test_tag', ndvi_instance.show_image_coordinates(self.file_name  + 'red.jp2'))
+        
+        ndvi, dimensions = ndvi_instance.calculate_ndvi()
+        normalizedIndexes = models.NormalizedIndexes(ndvi.tolist(), 0)
+
+        #temporalmente no muestro los índices porque es un array desastroso
+        satelliteImageProcessed = models.SatelliteImageProcessed(self.file_name, json.dumps(geographicInformation.__dict__), date_time, 0)
+        return satelliteImageProcessed.__dict__
