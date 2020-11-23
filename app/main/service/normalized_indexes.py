@@ -109,6 +109,9 @@ class NormalizedDifferenceIndex:
         return transformer.transform(transform_matrix[2], transform_matrix[5])
 
 class InitInformation:
+    """
+    Representa toda la información de la imagen una vez procesada. Es lo que debería devolver el POST CalculateNDVI. 
+    """
     def __init__(self, file_name):
         self.file_name = file_name
 
