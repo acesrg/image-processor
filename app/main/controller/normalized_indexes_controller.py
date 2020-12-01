@@ -16,7 +16,7 @@ class CalculateNDVI(Resource):
     @api.doc('calculate ndvi')
     def post(self):
         """calculate ndvi """
-        data = request.json
-        image_path = data["image_path"]
+        json_data = request.json
+        image_path = json_data["image_path"]
         information = normalized_indexes.InitInformation(image_path)
         return flask.jsonify(information._init_satellite_image())
