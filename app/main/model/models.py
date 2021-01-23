@@ -25,4 +25,3 @@ class SatelliteImageProcessed:
         self.geographic_information = geographic_information
         self.date_time = date_time
         self.normalized_indexes = normalized_indexes
-    
