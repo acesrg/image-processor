@@ -142,3 +142,4 @@ widgetsnbextension==3.5.1
 wordcloud==1.8.0
 wrapt==1.12.1
 zipp==3.1.0
+flake8==3.8.4
