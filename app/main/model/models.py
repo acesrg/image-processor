@@ -6,6 +6,7 @@ class NormalizedIndexes:
         self.ndvi = ndvi
         self.ndwi = ndwi
 
+
 class GeographicInformation:
     """
     Represents the geographic information of a given satellite image
@@ -13,6 +14,7 @@ class GeographicInformation:
     def __init__(self, tag_name, coordinates):
         self.tag_name = tag_name
         self.coordinates = coordinates
+
 
 class SatelliteImageProcessed:
     """
