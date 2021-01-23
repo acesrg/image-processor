@@ -19,8 +19,8 @@ class NormalizedDifferenceIndex:
         self.nir20_path = image_path + 'nir_3' + satellite_extensions[satellite]
         self.swir_path = image_path + 'swir' + satellite_extensions[satellite]
 
-        self.ndvi_path = image_path + 'ndvi.tiff'
-        self.ndwi_path = image_path + 'ndwi.tiff'
+        self.ndvi_path = image_path + 'ndvi.tif'
+        self.ndwi_path = image_path + 'ndwi.tif'
         # self.red_path = image_path + 'B4' + satellite_extensions[satellite]
 
     @staticmethod
@@ -112,6 +112,62 @@ class NormalizedDifferenceIndex:
 
         transformer = Transformer.from_crs("epsg:32720", "epsg:4326")
         return transformer.transform(transform_matrix[2], transform_matrix[5])
+
+    def reprojection(self, src_path, final_crs, final_path):
+        src = self._load_image(src_path)
+
+        original_width = src.width
+        original_height = src.height
+
+        transform, width, height = calculate_default_transform(src.crs, final_crs, original_width, original_height, *src.bounds)
+
+        kwargs = src.meta.copy()
+        kwargs.update({
+            'crs': final_crs,
+            'transform': transform,
+            'width': width,
+            'height': height})
+
+        transformed_src = rasterio.open(final_path, 'w', **kwargs)
+        for i in range(1, src.count + 1):
+            reproject(
+                source=rasterio.band(src, i),
+                destination=rasterio.band(transformed_src, i),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs=final_crs,
+                resampling=Resampling.nearest)
+
+    def parse_features(self, geo_dataframe):
+        return json.loads(geo_dataframe)
+
+    # el objeto de coordenadas se supone que está escrito en coordenadas ws84 ... creo que no vale la pena parametrizarlo
+    def crop_raster(self, coordinates, src_path, final_path):
+        src = self._load_image(src_path)
+
+        polygon = box(coordinates[0], coordinates[1], coordinates[2], coordinates[3])
+        geo_dataframe = gpd.GeoDataFrame({'geometry': polygon}, index=[0], crs=from_epsg(4326))
+        geo_dataframe = geo_dataframe.to_crs(crs=src.crs.data)  # ponele
+
+        polygon_coordinates = [json.loads(geo_dataframe.to_json())['features'][0]['geometry']]
+
+        epsg_code = int(src.crs.data['init'][5:])
+
+        out_img, out_transform = mask(src, shapes=polygon_coordinates, crop=True)
+
+        metadata = data_reproj.meta.copy()
+
+        cropped_crs = parse.from_epsg_code(epsg_code).to_proj4()
+
+        metadata.update({"driver": "GTiff",
+                         "height": out_img.shape[1],
+                         "width": out_img.shape[2],
+                         "transform": out_transform,
+                         "crs": cropped_crs})
+
+        with rasterio.open(final_path, "w", **metadata) as dest:
+            dest.write(out_img)
 
 
 class InitInformation:
