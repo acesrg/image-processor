@@ -2,6 +2,16 @@ import rasterio
 from rasterio import plot
 import numpy as np
 from pyproj import Transformer
+
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+
+from rasterio.mask import mask
+from shapely.geometry import box
+
+import geopandas as gpd
+from fiona.crs import from_epsg
+from pycrs import parse
+
 import json
 
 from ..model import models
@@ -31,18 +41,20 @@ class NormalizedDifferenceIndex:
         red_frequency = self._load_image(self.red_path)
         nir_frequency = self._load_image(self.nir10_path)
 
-        red = red_frequency.read(1).astype('float64')
-        nir = nir_frequency.read(1).astype('float64')
+        red = red_frequency.read(1).astype(float)
+        nir = nir_frequency.read(1).astype(float)
 
         np.seterr(divide='ignore', invalid='ignore')
-        # ndvi = 65536 * np.divide((nir-red),(nir+red)) -> it's not the same ¿?
+        # ndvi = 65536 * np.divide((nir-red),(nir+red)) -> ¿? revisar
         ndvi = np.where((nir - red) == 0., 0, (nir - red) / (nir + red))
-        dimensions = np.array([red_frequency.width, red_frequency.height, red_frequency.crs, red_frequency.transform])
+
+        metadata = red_frequency.meta
+        metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")
 
         red_frequency.close()
         nir_frequency.close()
 
-        return ndvi, dimensions
+        return ndvi, metadata
 
     def calculate_ndwi(self):
         swir_frequency = self._load_image(self.swir_path)
@@ -60,22 +72,12 @@ class NormalizedDifferenceIndex:
 
         return ndwi, dimensions
 
-    def write_ndvi_image(self):
-        ndvi, dimensions = self.calculate_ndvi()
+    def write_ndvi_image(self, src_path):
 
-        ndviImage = rasterio.open(
-            self.ndvi_path,
-            'w',
-            driver='Gtiff',
-            width=dimensions[0],
-            height=dimensions[1],
-            count=1,
-            crs=dimensions[2],
-            transform=dimensions[3],
-            dtype='float64')
+        ndvi, metadata = self.calculate_ndvi()
 
-        ndviImage.write(ndvi, 1)
-        ndviImage.close()
+        with rasterio.open(src_path, 'w', metadata) as temp:
+            temp.write_band(1, ndvi.astype(rasterio.float32))
 
     def write_ndwi_image(self):
         ndwi, dimensions = self.calculate_ndwi()
@@ -142,7 +144,7 @@ class NormalizedDifferenceIndex:
     def parse_features(self, geo_dataframe):
         return json.loads(geo_dataframe)
 
-    # el objeto de coordenadas se supone que está escrito en coordenadas ws84 ... creo que no vale la pena parametrizarlo
+    # el objeto de coordenadas se supone que estÃ¡ escrito en coordenadas ws84 ... creo que no vale la pena parametrizarlo
     def crop_raster(self, coordinates, src_path, final_path):
         src = self._load_image(src_path)
 
@@ -156,7 +158,7 @@ class NormalizedDifferenceIndex:
 
         out_img, out_transform = mask(src, shapes=polygon_coordinates, crop=True)
 
-        metadata = data_reproj.meta.copy()
+        metadata = src.meta.copy()
 
         cropped_crs = parse.from_epsg_code(epsg_code).to_proj4()
 
@@ -164,7 +166,8 @@ class NormalizedDifferenceIndex:
                          "height": out_img.shape[1],
                          "width": out_img.shape[2],
                          "transform": out_transform,
-                         "crs": cropped_crs})
+                         "crs": cropped_crs,
+                         "dtype": rasterio.float32})
 
         with rasterio.open(final_path, "w", **metadata) as dest:
             dest.write(out_img)
@@ -172,7 +175,7 @@ class NormalizedDifferenceIndex:
 
 class InitInformation:
     """
-    Representa toda la información de la imagen una vez procesada. Es lo que debería devolver el POST CalculateNDVI.
+    Representa toda la informaciÃ³n de la imagen una vez procesada. Es lo que deberÃ­a devolver el POST CalculateNDVI.
     """
     def __init__(self, file_name):
         self.file_name = file_name
@@ -187,14 +190,14 @@ class InitInformation:
     def _init_satellite_image(self):
         ndvi_instance = self._init_ndvi()
 
-        # TODO parametrizar fecha, tag, etc (estos sólo son datos de prueba)
+        # TODO parametrizar fecha, tag, etc (estos sÃ³lo son datos de prueba)
         date_time = '2012-04-23T18:25:43.511Z'
         geographicInformation = models.GeographicInformation('test_tag', ndvi_instance.show_image_coordinates(self.file_name + 'red.jp2'))
 
         ndvi, dimensions = ndvi_instance.calculate_ndvi()
         # normalizedIndexes = models.NormalizedIndexes(ndvi.tolist(), 0)
 
-        # temporalmente no muestro los índices porque es un array desastroso
+        # temporalmente no muestro los Ã­ndices porque es un array desastroso
         satelliteImageProcessed = models.SatelliteImageProcessed(self.file_name, json.dumps(geographicInformation.__dict__), date_time, 0)
 
         return satelliteImageProcessed.__dict__
