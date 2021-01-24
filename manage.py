@@ -1,5 +1,6 @@
 import os
 
+from flask_migrate import Migrate, MigrateCommand  # noqa: F401
 from flask_script import Manager
 from app import blueprint
 

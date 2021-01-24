@@ -1,7 +1,9 @@
 import werkzeug
-from flask_restplus import Api
-from flask import Blueprint
-from .main.controller.normalized_indexes_controller import api as ndvi_api
+werkzeug.cached_property = werkzeug.utils.cached_property  # noqa: E402
+from flask_restplus import Api  # noqa: E402
+from flask import Blueprint  # noqa: E402
+
+from .main.controller.normalized_indexes_controller import api as ndvi_api  # noqa: E402
 
 werkzeug.cached_property = werkzeug.utils.cached_property
 

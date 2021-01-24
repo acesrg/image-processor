@@ -1,6 +1,7 @@
 import flask
 from flask import request
 from flask_restplus import Resource
+from flask_restplus import Namespace  # noqa: E401
 from ..service import normalized_indexes
 
 
