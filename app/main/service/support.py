@@ -1,3 +1,4 @@
+import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from rasterio.mask import mask
 from shapely.geometry import box
@@ -5,6 +6,7 @@ from fiona.crs import from_epsg
 from pyproj import Transformer
 import geopandas as gpd
 from pycrs import parse
+import json as js
 
 
 class Support:
@@ -31,7 +33,7 @@ class Support:
         transformer = Transformer.from_crs("epsg:32720", "epsg:4326")
         return transformer.transform(transform_matrix[2], transform_matrix[5])
 
-    def reprojection(self, src_path, final_crs, final_path):
+    def reprojection(self, final_crs, src_path, final_path):
         """
         Reproyecta una imagen al sistema de coordenadas que se le indique
         """
@@ -65,6 +67,7 @@ class Support:
         Recorta la imagen a partir de un par de coordenadas (x,y) determinado.
         VORSICHT: quizás debería agregar el sistema de coordenadas como parámetro.
         Actualmente no está de esa manera porque todas las coordenadas con las que se trabajan son ws84 pero nunca se sabe...
+        VORSICHT 2: debería controlar que las coordenadas estén dentro del rango de la imagen
         """
         src = self._load_image(src_path)
 
@@ -91,3 +94,33 @@ class Support:
 
         with rasterio.open(final_path, "w", **metadata) as dest:
             dest.write(out_img)
+
+    def parse_coordinates(self, json_path):
+        dictionary = {}
+
+        with open(json_path) as json_file:
+            data = js.load(json_file)
+
+            for i in data['features']:
+                coordinates = i['geometry']['coordinates']
+                title = i['properties']['Title']
+                dictionary[title] = coordinates
+
+        return dictionary
+
+    def crop_process(self, images_path, src_name, data_path, json_name):
+        json_path = data_path + json_name
+        coordinates_dictionary = self.parse_coordinates(json_path)
+
+        original_image = images_path + '/' + src_name
+        reprojected_image = images_path + '/reprojected-' + src_name
+        self.reprojection('EPSG:4326', original_image, reprojected_image)
+        print(original_image)
+        print(reprojected_image)
+
+        for i in coordinates_dictionary:
+            #  /images_path/tag_name_src_name -> /server_folder/punilla_image.tif
+            cropped_path = images_path + '/' + i + '-' + src_name
+            coordinates = coordinates_dictionary[i]  # deberían ser DOS pares de coordenadas, no uno solo
+            print("Starting to crop at " + i)
+            self.crop_raster(coordinates, reprojected_image, cropped_path)
