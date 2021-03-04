@@ -1,0 +1,7 @@
+language: python
+python: "3.9"
+
+install:
+    - pip install -r requirements.txt
+scripts:
+    - flake8 --ignore=E501,F821 .
