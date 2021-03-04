@@ -1,6 +1,8 @@
 import rasterio
 from rasterio import plot
+from rasterio import errors as re
 import numpy as np
+import os
 
 satellite_extensions = {
     'sentinel': '.jp2',
@@ -20,12 +22,19 @@ class NormalizedDifferenceIndex:
         # self.red_path = image_path + 'B4' + satellite_extensions[satellite]
 
     @staticmethod
-    def _load_image(path):
-        return rasterio.open(path)
+    def _load_image(src_path):
+        if os.path.isfile(src_path) == True:
+            return rasterio.open(src_path)
+        else:
+            print("no such file " + src_path)
 
     def calculate_ndvi(self):
-        red_frequency = self._load_image(self.red_path)
-        nir_frequency = self._load_image(self.nir10_path)
+        try:
+            red_frequency = self._load_image(self.red_path)
+            nir_frequency = self._load_image(self.nir10_path)
+        except rasterio.errors.RasterioError as e:
+            print("something went wrong :(")
+            return
 
         red = red_frequency.read(1).astype(float)
         nir = nir_frequency.read(1).astype(float)
@@ -40,6 +49,7 @@ class NormalizedDifferenceIndex:
         red_frequency.close()
         nir_frequency.close()
 
+        print("ndvi correctly calculated")
         return ndvi, metadata
 
     def calculate_ndwi(self):
@@ -58,12 +68,13 @@ class NormalizedDifferenceIndex:
 
         return ndwi, dimensions
 
-    def write_ndvi_image(self, src_path):
-
+    def write_ndvi_image(self):
         ndvi, metadata = self.calculate_ndvi()
 
-        with rasterio.open(src_path, 'w', metadata) as temp:
+        with rasterio.open(self.ndvi_path, 'w', **metadata) as temp:
             temp.write_band(1, ndvi.astype(rasterio.float32))
+        
+        print("image correctly written")
 
     def write_ndwi_image(self):
         ndwi, dimensions = self.calculate_ndwi()
