@@ -75,7 +75,7 @@ class Support:
         geo_dataframe = gpd.GeoDataFrame({'geometry': polygon}, index=[0], crs=from_epsg(4326))
         geo_dataframe = geo_dataframe.to_crs(crs=src.crs.data)  # ponele
 
-        polygon_coordinates = [json.loads(geo_dataframe.to_json())['features'][0]['geometry']]
+        polygon_coordinates = [js.loads(geo_dataframe.to_json())['features'][0]['geometry']]
 
         epsg_code = int(src.crs.data['init'][5:])
 

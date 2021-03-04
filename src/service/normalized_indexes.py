@@ -1,6 +1,5 @@
 import rasterio
 from rasterio import plot
-from rasterio import errors as re
 import numpy as np
 import os
 
@@ -23,7 +22,7 @@ class NormalizedDifferenceIndex:
 
     @staticmethod
     def _load_image(src_path):
-        if os.path.isfile(src_path) == True:
+        if os.path.isfile(src_path) is True:
             return rasterio.open(src_path)
         else:
             print("no such file " + src_path)
@@ -32,7 +31,7 @@ class NormalizedDifferenceIndex:
         try:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
-        except rasterio.errors.RasterioError as e:
+        except rasterio.errors.RasterioError:
             print("something went wrong :(")
             return
 
@@ -73,7 +72,7 @@ class NormalizedDifferenceIndex:
 
         with rasterio.open(self.ndvi_path, 'w', **metadata) as temp:
             temp.write_band(1, ndvi.astype(rasterio.float32))
-        
+
         print("image correctly written")
 
     def write_ndwi_image(self):
