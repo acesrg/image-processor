@@ -17,7 +17,10 @@ class EventHandler(FileSystemEventHandler):
 
         inotify = INotify()
 
+        print("listening to " + event.src_path)
+
         for match in matches:
+            print("match found")
             images_path = os.path.dirname(event.src_path) + '/'
             img = os.path.basename(event.src_path)
 
@@ -31,13 +34,23 @@ class EventHandler(FileSystemEventHandler):
         nir_exists = os.path.isfile(images_path + 'nir4_832_10.jp2')
 
         if red_exists and nir_exists:
-            print("starting ndvi calculation process...")
             ni = NormalizedDifferenceIndex(images_path, 'sentinel')
+            print("starting ndvi calculation process...")
             ni.write_ndvi_image()
 
-            print("starting cropping process...")
             support = Support()
-            support.crop_process(images_path, 'ndvi.tif', images_path, '/places.json')
+
+            src_name = 'ndvi.tif'
+            original_image = images_path + src_name
+            reprojected_image = images_path + 'reprojected-' + src_name
+
+            print("starting reprojection process...")
+            support.reprojection('EPSG:4326', original_image, reprojected_image)
+
+            print("starting cropping process...")
+            support.crop_process(images_path, 'reprojected-' + src_name, images_path, '/graticules', "ISO8859-1")
+
+            print("returning to detection process")
 
 
 def image_daemon(server_path):
