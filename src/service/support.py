@@ -7,7 +7,9 @@ from pyproj import Transformer
 import geopandas as gpd
 from pycrs import parse
 import json as js
-
+import shapefile as sf
+import io
+import os
 
 class Support:
     """
@@ -108,19 +110,71 @@ class Support:
 
         return dictionary
 
-    def crop_process(self, images_path, src_name, data_path, json_name):
-        json_path = data_path + json_name
-        coordinates_dictionary = self.parse_coordinates(json_path)
-
+    def crop_process(self, images_path, src_name, data_path, datafile_name, encoding_type):
         original_image = images_path + '/' + src_name
-        reprojected_image = images_path + '/reprojected-' + src_name
-        self.reprojection('EPSG:4326', original_image, reprojected_image)
-        print(original_image)
-        print(reprojected_image)
 
-        for i in coordinates_dictionary:
-            #  /images_path/tag_name_src_name -> /server_folder/punilla_image.tif
-            cropped_path = images_path + '/' + i + '-' + src_name
-            coordinates = coordinates_dictionary[i]  # deberían ser DOS pares de coordenadas, no uno solo
-            print("Starting to crop at " + i)
-            self.crop_raster(coordinates, reprojected_image, cropped_path)
+        name, extension = os.path.splitext(datafile_name)
+
+        if extension == '.json':
+            json_path = data_path + datafile_name
+            coordinates_dictionary = self.parse_coordinates(json_path)  # parseo un archivo de coordenadas con formato gmaps
+
+            for i in coordinates_dictionary:
+                cropped_path = images_path + '/' + i + '-' + src_name
+                coordinates = coordinates_dictionary[i]  # deberían ser DOS pares de coordenadas, no uno solo
+                print("Starting to crop at " + i)
+                self.crop_raster(coordinates, original_image, cropped_path)
+
+        else:  # agregar para uqe de alguna manera lo detecte como shape file... una condicion o algo que se fije de que en ese directorio están los tres archivos necesarios
+            shapefile_path = data_path + datafile_name
+            source = sf.Reader(shapefile_path, encoding = encoding_type)
+            
+            i = 0
+            for item in source.iterShapeRecords():
+                coordinates = item.shape.bbox
+                cropped_path = images_path + '/' + str(i) + '-' + src_name
+                i = i+1
+                self.crop_raster(coordinates, original_image, cropped_path)
+        
+
+    # esto tiene que tomar un raster ya reproyectado ¡!
+    # TODO definir cuándo hacerlo
+    # TODO testearlo acá (ver jupyter cualquier cosa)
+    def get_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
+        shapefile_path = data_path + shapefile_name
+        source = sf.Reader(shapefile_path, encoding=encoding_type)
+
+        shape_type = source.shapeType
+
+        shp = io.StringIO
+
+        destination = sf.Writer(data_path + 'custom_coordinates', shp = shp, shapeType = shape_type, encoding = encoding_type)
+        destination.fields = source.fields[1:]
+
+        raster = rasterio.open(images_path + raster_name)
+        border_coordinates = raster.bounds
+
+        x_bound_min = abs(border_coordinates[0])
+        y_bound_min = abs(border_coordinates[1])
+        x_bound_max = abs(border_coordinates[2])
+        y_bound_max = abs(border_coordinates[3])
+
+        raster.close()
+
+        for shaperec in source.iterShapeRecords():
+            shp_borders = shaperec.shape.bbox
+
+            x_min = abs(shp_borders[0])
+            y_min = abs(shp_borders[1])
+            x_max = abs(shp_borders[2])
+            y_max = abs(shp_borders[2])
+
+            # fijarse si hay alguna forma mejor de hacer esto
+            if x_min <= x_bound_min and x_min >= x_bound_max and y_min <= y_bound_min and y_min >= y_bound_max:
+                if x_max <= x_bound_min and x_max >= x_bound_max and y_max <= y_bound_min and y_max >= y_bound_max:
+                    w.record(*shaperec.record)
+                    w.shape(shaperec.shape)
+
+        destination.close()
+
+
