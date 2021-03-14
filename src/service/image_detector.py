@@ -39,11 +39,11 @@ class EventHandler(FileSystemEventHandler):
             ni.write_ndvi_image()
 
             support = Support()
-            
+
             src_name = 'ndvi.tif'
             original_image = images_path + src_name
             reprojected_image = images_path + 'reprojected-' + src_name
-            
+
             print("starting reprojection process...")
             support.reprojection('EPSG:4326', original_image, reprojected_image)
 

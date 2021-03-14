@@ -11,6 +11,7 @@ import shapefile as sf
 import io
 import os
 
+
 class Support:
     """
     Clase que tiene todos los métodos de soporte para manipular las imágenes
@@ -127,15 +128,14 @@ class Support:
 
         else:  # agregar para uqe de alguna manera lo detecte como shape file... una condicion o algo que se fije de que en ese directorio están los tres archivos necesarios
             shapefile_path = data_path + datafile_name
-            source = sf.Reader(shapefile_path, encoding = encoding_type)
-            
+            source = sf.Reader(shapefile_path, encoding=encoding_type)
+
             i = 0
             for item in source.iterShapeRecords():
                 coordinates = item.shape.bbox
                 cropped_path = images_path + '/' + str(i) + '-' + src_name
-                i = i+1
+                i = i + 1
                 self.crop_raster(coordinates, original_image, cropped_path)
-        
 
     # esto tiene que tomar un raster ya reproyectado ¡!
     # TODO definir cuándo hacerlo
@@ -148,7 +148,7 @@ class Support:
 
         shp = io.StringIO
 
-        destination = sf.Writer(data_path + 'custom_coordinates', shp = shp, shapeType = shape_type, encoding = encoding_type)
+        destination = sf.Writer(data_path + 'custom_coordinates', shp=shp, shapeType=shape_type, encoding=encoding_type)
         destination.fields = source.fields[1:]
 
         raster = rasterio.open(images_path + raster_name)
@@ -172,9 +172,7 @@ class Support:
             # fijarse si hay alguna forma mejor de hacer esto
             if x_min <= x_bound_min and x_min >= x_bound_max and y_min <= y_bound_min and y_min >= y_bound_max:
                 if x_max <= x_bound_min and x_max >= x_bound_max and y_max <= y_bound_min and y_max >= y_bound_max:
-                    w.record(*shaperec.record)
-                    w.shape(shaperec.shape)
+                    destination.record(*shaperec.record)
+                    destination.shape(shaperec.shape)
 
         destination.close()
-
-
