@@ -12,13 +12,15 @@ satellite_extensions = {
 class NormalizedDifferenceIndex:
     def __init__(self, image_path, satellite):
         self.red_path = image_path + 'red_665_10' + satellite_extensions[satellite]
+        self.green_path = image_path + 'green_560_10' + satellite_extensions[satellite]
         self.nir10_path = image_path + 'nir4_832_10' + satellite_extensions[satellite]
-        self.nir20_path = image_path + 'nir_3' + satellite_extensions[satellite]
-        self.swir_path = image_path + 'swir' + satellite_extensions[satellite]
+
+        self.nir20_path = image_path + 'nir4a_865_20' + satellite_extensions[satellite]
+        self.swir_path = image_path + 'swir3_1614_20' + satellite_extensions[satellite]
 
         self.ndvi_path = image_path + 'ndvi.tif'
-        self.ndwi_path = image_path + 'ndwi.tif'
-        # self.red_path = image_path + 'B4' + satellite_extensions[satellite]
+        self.ndwi_vegetation_path = image_path + 'ndwi_vegetation.tif'
+        self.ndwi_water_path = image_path + 'ndwi_water_bodies.tif'
 
     @staticmethod
     def _load_image(src_path):
@@ -39,7 +41,6 @@ class NormalizedDifferenceIndex:
         nir = nir_frequency.read(1).astype(float)
 
         np.seterr(divide='ignore', invalid='ignore')
-        # ndvi = 65536 * np.divide((nir-red),(nir+red)) -> ¿? revisar
         ndvi = np.where((nir - red) == 0., 0, (nir - red) / (nir + red))
 
         metadata = red_frequency.meta
@@ -51,45 +52,44 @@ class NormalizedDifferenceIndex:
         print("ndvi correctly calculated")
         return ndvi, metadata
 
-    def calculate_ndwi(self):
-        swir_frequency = self._load_image(self.swir_path)
-        nir_frequency = self._load_image(self.nir20_path)
+    def calculate_ndwi_vegetation(self):
+        try:
+            swir_frequency = self._load_image(self.swir_path)
+            nir_frequency = self._load_image(self.nir20_path)
+        except rasterio.errors.RasterioError:
+            print("something went wrong :(")
+            return
 
-        swir = swir_frequency.read(1).astype('float64')
-        nir = nir_frequency.read(1).astype('float64')
+        swir = swir_frequency.read().astype('float64')
+        nir = nir_frequency.read().astype('float64')
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndwi = 65536 * np.divide((nir - swir), (nir + swir))
-        dimensions = np.array([swir_frequency.width, swir_frequency.height, swir_frequency.crs, swir_frequency.transform])
+        ndwi_vegetation = np.where((nir - swir) == 0., 0, (nir - swir) / (nir + swir))  # water content in vegetation
+
+        metadata = swir_frequency.meta
+        metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")
 
         swir_frequency.close()
         nir_frequency.close()
 
-        return ndwi, dimensions
+        print("ndwi for vegetation correctly calculated")
+        return ndwi_vegetation, metadata
 
-    def write_ndvi_image(self):
-        ndvi, metadata = self.calculate_ndvi()
+    def write_new_raster(self, type):
+        if type == "ndvi":
+            output, metadata = self.calculate_ndvi()
+        elif type == "ndwi_vegetation":
+            output, metadata = self.calculate_ndwi_vegetation()
+        else:
+            print("invalid operation, try again")
+            return
 
-        with rasterio.open(self.ndvi_path, 'w', **metadata) as temp:
-            temp.write_band(1, ndvi.astype(rasterio.float32))
+        output_path = self.image_path + type + ".tif"
 
-        print("image correctly written")
+        with rasterio.open(output_path, 'w', **metadata) as temp:
+            temp.write_band(1, output.astype(rasterio.float32))
 
-    def write_ndwi_image(self):
-        ndwi, dimensions = self.calculate_ndwi()
-
-        ndviImage = rasterio.open(
-            self.ndwi_path,
-            'w',
-            driver='Gtiff',
-            width=dimensions[0],
-            height=dimensions[1],
-            count=1,
-            crs=dimensions[2],
-            transform=dimensions[3],
-            dtype='float64')
-        ndviImage.write(ndwi, 1)
-        ndviImage.close()
+        print("image correctly written: " + output_path)
 
     def plot_ndvi_image(self, plot_name):
         ndviImage = self._load_image(self.ndvi_path)
