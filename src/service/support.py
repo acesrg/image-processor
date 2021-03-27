@@ -98,7 +98,7 @@ class Support:
         with rasterio.open(final_path, "w", **metadata) as dest:
             dest.write(out_img)
 
-    def parse_coordinates(self, json_path):
+    def parse_coordinates_from_json(self, json_path):
         dictionary = {}
 
         with open(json_path) as json_file:
@@ -118,7 +118,7 @@ class Support:
 
         if extension == '.json':
             json_path = data_path + datafile_name
-            coordinates_dictionary = self.parse_coordinates(json_path)  # parseo un archivo de coordenadas con formato gmaps
+            coordinates_dictionary = self.parse_coordinates_from_json(json_path)  # parseo un archivo de coordenadas con formato gmaps
 
             for i in coordinates_dictionary:
                 cropped_path = images_path + '/' + i + '-' + src_name
@@ -140,7 +140,7 @@ class Support:
     # esto tiene que tomar un raster ya reproyectado ¡!
     # TODO definir cuándo hacerlo
     # TODO testearlo acá (ver jupyter cualquier cosa)
-    def get_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
+    def parse_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
         shapefile_path = data_path + shapefile_name
         source = sf.Reader(shapefile_path, encoding=encoding_type)
 
