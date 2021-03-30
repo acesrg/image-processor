@@ -1,3 +1,21 @@
+#
+# Copyright (c) 2021 PAULA B. OLMEDO.
+#
+# This file is part of IMAGE_PROCESSOR
+# (see https://github.com/paulaolmedo/image-processor).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.#
 import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from rasterio.mask import mask
@@ -98,7 +116,7 @@ class Support:
         with rasterio.open(final_path, "w", **metadata) as dest:
             dest.write(out_img)
 
-    def parse_coordinates(self, json_path):
+    def parse_coordinates_from_json(self, json_path):
         dictionary = {}
 
         with open(json_path) as json_file:
@@ -118,7 +136,7 @@ class Support:
 
         if extension == '.json':
             json_path = data_path + datafile_name
-            coordinates_dictionary = self.parse_coordinates(json_path)  # parseo un archivo de coordenadas con formato gmaps
+            coordinates_dictionary = self.parse_coordinates_from_json(json_path)  # parseo un archivo de coordenadas con formato gmaps
 
             for i in coordinates_dictionary:
                 cropped_path = images_path + '/' + i + '-' + src_name
@@ -140,7 +158,7 @@ class Support:
     # esto tiene que tomar un raster ya reproyectado ¡!
     # TODO definir cuándo hacerlo
     # TODO testearlo acá (ver jupyter cualquier cosa)
-    def get_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
+    def parse_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
         shapefile_path = data_path + shapefile_name
         source = sf.Reader(shapefile_path, encoding=encoding_type)
 
