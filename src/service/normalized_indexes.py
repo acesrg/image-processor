@@ -20,6 +20,7 @@ import rasterio
 from rasterio import plot
 import numpy as np
 import os
+from cloud_filter import CloudFilter
 
 satellite_extensions = {
     'sentinel': '.jp2',
@@ -39,6 +40,8 @@ class NormalizedDifferenceIndex:
         self.ndvi_path = image_path + 'ndvi.tif'
         self.ndwi_vegetation_path = image_path + 'ndwi_vegetation.tif'
         self.ndwi_water_path = image_path + 'ndwi_water_bodies.tif'
+        self.cloud_filter = CloudFilter(image_path)
+        self.image_path = image_path
 
     @staticmethod
     def _load_image(src_path):
@@ -58,8 +61,13 @@ class NormalizedDifferenceIndex:
         red = red_frequency.read(1).astype(float)
         nir = nir_frequency.read(1).astype(float)
 
+        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+
+        nir_masked = np.ma.masked_where(cloud_mask != 1, nir)
+        red_masked = np.ma.masked_where(cloud_mask != 1, red)
+
         np.seterr(divide='ignore', invalid='ignore')
-        ndvi = np.where((nir - red) == 0., 0, (nir - red) / (nir + red))
+        ndvi = np.where((nir_masked - red_masked) == 0., 0, (nir_masked - red_masked) / (nir_masked + red_masked))
 
         metadata = red_frequency.meta
         metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")
@@ -93,16 +101,16 @@ class NormalizedDifferenceIndex:
         print("ndwi for vegetation correctly calculated")
         return ndwi_vegetation, metadata
 
-    def write_new_raster(self, type):
-        if type == "ndvi":
+    def write_new_raster(self, operation_type):
+        if operation_type == "ndvi":
             output, metadata = self.calculate_ndvi()
-        elif type == "ndwi_vegetation":
+        elif operation_type == "ndwi_vegetation":
             output, metadata = self.calculate_ndwi_vegetation()
         else:
             print("invalid operation, try again")
             return
 
-        output_path = self.image_path + type + ".tif"
+        output_path = self.image_path + operation_type + ".tif"
 
         with rasterio.open(output_path, 'w', **metadata) as temp:
             temp.write_band(1, output.astype(rasterio.float32))
