@@ -97,7 +97,7 @@ class NormalizedDifferenceIndex:
         nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndwi_vegetation = np.where((nir - swir) == 0., 0, (nir - swir) / (nir + swir))  # water content in vegetation
+        ndwi_vegetation = np.where((nir_masked - swir_masked) == 0., 0, (nir_masked - swir_masked) / (nir_masked + swir_masked))  # water content in vegetation
 
         metadata = swir_frequency.meta
         metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")

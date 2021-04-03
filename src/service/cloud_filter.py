@@ -115,7 +115,7 @@ class CloudFilter:
 
         resized_mask = scipy.ndimage.zoom(cloud_mask[0], 6, mode='nearest')
         temp = np.multiply(resized_mask, -1)
-        
+
         resized_mask_invertida = np.add(temp, 1)
 
-        return resized_mask
+        return resized_mask_invertida
