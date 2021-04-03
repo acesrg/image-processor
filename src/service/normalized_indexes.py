@@ -50,7 +50,8 @@ class NormalizedDifferenceIndex:
         else:
             print("no such file " + src_path)
 
-    def calculate_ndvi(self):
+    @staticmethod
+    def _calculate_ndvi(self):
         try:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
@@ -63,8 +64,8 @@ class NormalizedDifferenceIndex:
 
         cloud_mask = self.cloud_filter.calculate_cloud_mask()
 
-        nir_masked = np.ma.masked_where(cloud_mask != 1, nir)
-        red_masked = np.ma.masked_where(cloud_mask != 1, red)
+        red_masked = np.multiply(cloud_mask, red)
+        nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
         ndvi = np.where((nir_masked - red_masked) == 0., 0, (nir_masked - red_masked) / (nir_masked + red_masked))
@@ -78,7 +79,8 @@ class NormalizedDifferenceIndex:
         print("ndvi correctly calculated")
         return ndvi, metadata
 
-    def calculate_ndwi_vegetation(self):
+    @staticmethod
+    def _calculate_ndwi_vegetation(self):
         try:
             swir_frequency = self._load_image(self.swir_path)
             nir_frequency = self._load_image(self.nir20_path)
@@ -88,6 +90,11 @@ class NormalizedDifferenceIndex:
 
         swir = swir_frequency.read().astype('float64')
         nir = nir_frequency.read().astype('float64')
+
+        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+
+        swir_masked = np.multiply(cloud_mask, swir)
+        nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
         ndwi_vegetation = np.where((nir - swir) == 0., 0, (nir - swir) / (nir + swir))  # water content in vegetation
@@ -103,9 +110,9 @@ class NormalizedDifferenceIndex:
 
     def write_new_raster(self, operation_type):
         if operation_type == "ndvi":
-            output, metadata = self.calculate_ndvi()
+            output, metadata = self._calculate_ndvi()
         elif operation_type == "ndwi_vegetation":
-            output, metadata = self.calculate_ndwi_vegetation()
+            output, metadata = self._calculate_ndwi_vegetation()
         else:
             print("invalid operation, try again")
             return
