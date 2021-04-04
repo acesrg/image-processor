@@ -68,7 +68,10 @@ class NormalizedDifferenceIndex:
         nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndvi = np.where((nir_masked - red_masked) == 0., 0, (nir_masked - red_masked) / (nir_masked + red_masked))
+        ndvi_temp = np.where((nir_masked - red_masked) == 0., 0, (nir_masked - red_masked) / (nir_masked + red_masked))
+
+        cloud_mask_NaN = np.multiply(cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
+        ndvi = np.multiply(cloud_mask_NaN, ndvi_temp)
 
         metadata = red_frequency.meta
         metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")
@@ -97,7 +100,10 @@ class NormalizedDifferenceIndex:
         nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndwi_vegetation = np.where((nir_masked - swir_masked) == 0., 0, (nir_masked - swir_masked) / (nir_masked + swir_masked))  # water content in vegetation
+        ndwi_vegetation_temp = np.where((nir_masked - swir_masked) == 0., 0, (nir_masked - swir_masked) / (nir_masked + swir_masked))  # water content in vegetation
+
+        cloud_mask_NaN = np.multiply(cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
+        ndwi_vegetation = np.multiply(cloud_mask_NaN, ndwi_vegetation_temp)
 
         metadata = swir_frequency.meta
         metadata.update(dtype=rasterio.float32, count=1, driver="GTiff")
