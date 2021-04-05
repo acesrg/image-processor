@@ -28,18 +28,19 @@ import json as js
 import shapefile as sf
 import io
 import os
+import numpy as np
 
 
-class Support:
+class ManageRasterData:
     """
-    Clase que tiene todos los métodos de soporte para manipular las imágenes
+    Clase que tiene todos los métodos de soporte para manipular los raster
     """
 
     def __init__(self):
         pass
 
     @staticmethod
-    def _load_image(path):
+    def __load_image(path):
         return rasterio.open(path)
 
     def show_image_coordinates(self, src_path):
@@ -194,3 +195,33 @@ class Support:
                     destination.shape(shaperec.shape)
 
         destination.close()
+
+    # créditos
+    def stats(self, geom, data, **mask_kw):
+        masked, mask_transform = mask(dataset=data, shapes=(geom,), crop=True, all_touched=True, filled=True)
+        return masked
+
+    def statistics_process(self, data_path, images_path):
+        raster = rasterio.open(images_path + 'ndvi-reprojected.tif')  # acá lo mismo que abajo, no debería
+        graticules = gpd.read_file(data_path + 'custom_coordinates.shp')
+
+        # acá tendría que calcularle según sea necesario, no solamente el ndvi -> arreglar asap
+        graticules['mean_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
+        graticules['max_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.max)
+        graticules['min_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
+        graticules['median_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
+
+        #  abro el MISMO archivo que estaba leyendo con geopandas,
+        # pero especificamente como shapefile para leer correctamente el objeto que representa los polígonos
+        shapefile_reader = sf.Reader(images_path + 'custom_coordinates.shp', encoding="ISO8859-1")
+        polygon_coordinates = []
+
+        for shaperec in shapefile_reader.iterShapeRecords():
+            bbox = shaperec.shape.bbox  # devuelve un objeto que representa las coordenadas de esa gratícula AKA parcela según la gente normal
+            polygon_coordinates.append(bbox)
+
+        graticules['coordinates'] = polygon_coordinates
+
+        # reasigno los valores al objeto graticules así tiene sólo lo que me hace falta
+        graticules = graticules[["gid", "coordinates", "mean_ndvi", "max_ndvi", "min_ndvi", "median_ndvi"]]
+        graticules.to_csv(data_path + "processing_results.csv")
