@@ -11,7 +11,7 @@ upload_job:
   script:
     - echo "test"
     - ls $SAFO_DEFAULT_PATH
-    - cp -r $SAFO_DEFAULT_PATH/safo/test_empty $CI_PROJECT_DIR
+    - cp -r $SAFO_DEFAULT_PATH/test_empty $CI_PROJECT_DIR
   #  - ls $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
