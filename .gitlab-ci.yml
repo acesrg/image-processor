@@ -8,10 +8,12 @@ build-job:
   stage: build
   script:
     - echo "test"
-    - ls /home/pi/safo
+    - ls $SAFO_DEFAULT_PATH
+    - cp -r $SAFO_DEFAULT_PATH $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR
   artifacts:
     paths:
-    - $SAFO_DEFAULT_PATH/*
+    - $CI_PROJECT_DIR/safo
   tags:
     - rpi
     - local
