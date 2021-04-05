@@ -1,3 +1,6 @@
+variables:
+  SAFO_DEFAULT_PATH: /home/pi/safo
+
 stages:
   - build
 
@@ -5,3 +8,10 @@ build-job:
   stage: build
   script:
     - echo "test"
+    - ls /home/pi/safo
+  artifacts:
+    paths:
+    - SAFO_DEFAULT_PATH
+  tags:
+    - rpi
+    - local
