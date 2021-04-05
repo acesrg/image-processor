@@ -12,10 +12,10 @@ upload_job:
     - echo "test"
     - ls $SAFO_DEFAULT_PATH
     - cp -r $SAFO_DEFAULT_PATH $CI_PROJECT_DIR
-    - ls $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
-    - $CI_PROJECT_DIR/safo
+    - $CI_PROJECT_DIR/safo/test_images
   tags:
     - rpi
     - local
@@ -25,9 +25,7 @@ statistics_calculation_job:
   when: manual
   script:
     - echo "test"
-    - ls $SAFO_DEFAULT_PATH
-    - cp -r $SAFO_DEFAULT_PATH $CI_PROJECT_DIR
-    - ls $CI_PROJECT_DIR
+    - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
     - $CI_PROJECT_DIR/safo
