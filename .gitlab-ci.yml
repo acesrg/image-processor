@@ -1,7 +1,7 @@
 stages:
   - build
 
-build-code-job:
+build-job:
   stage: build
   script:
     - echo "hola"
