@@ -2,10 +2,12 @@ variables:
   SAFO_DEFAULT_PATH: /home/pi/safo
 
 stages:
-  - build
+  - upload
+  - statistics_calculation
 
-build-job:
-  stage: build
+upload_job:
+  stage: upload
+  when: manual
   script:
     - echo "test"
     - ls $SAFO_DEFAULT_PATH
@@ -17,3 +19,15 @@ build-job:
   tags:
     - rpi
     - local
+
+statistics_calculation_job:
+  stage: statistics_calculation
+  when: manual
+  script:
+    - echo "test"
+    - ls $SAFO_DEFAULT_PATH
+    - cp -r $SAFO_DEFAULT_PATH $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/safo
