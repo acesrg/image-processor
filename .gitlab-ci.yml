@@ -22,10 +22,10 @@ upload_job:
 
 statistics_calculation_job:
   stage: statistics_calculation
+  image: paulabeatrizolmedo/image-processor
   when: manual
   script:
-    - echo "test"
     - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
-    - $CI_PROJECT_DIR/safo
+    - $CI_PROJECT_DIR/safo/test_images/processing_results.csv
