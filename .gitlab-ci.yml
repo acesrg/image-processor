@@ -15,7 +15,7 @@ upload_job:
   #  - ls $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
-    - $CI_PROJECT_DIR/safo/test_empty
+    - $CI_PROJECT_DIR/test_empty
   tags:
     - rpi
     - local
