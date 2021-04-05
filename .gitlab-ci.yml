@@ -11,7 +11,7 @@ build-job:
     - ls /home/pi/safo
   artifacts:
     paths:
-    - SAFO_DEFAULT_PATH
+    - $SAFO_DEFAULT_PATH/*
   tags:
     - rpi
     - local
