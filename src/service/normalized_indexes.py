@@ -50,8 +50,7 @@ class NormalizedDifferenceIndex:
         else:
             print("no such file " + src_path)
 
-    @staticmethod
-    def _calculate_ndvi(self):
+    def calculate_ndvi(self):
         try:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
@@ -82,8 +81,7 @@ class NormalizedDifferenceIndex:
         print("ndvi correctly calculated")
         return ndvi, metadata
 
-    @staticmethod
-    def _calculate_ndwi_vegetation(self):
+    def calculate_ndwi_vegetation(self):
         try:
             swir_frequency = self._load_image(self.swir_path)
             nir_frequency = self._load_image(self.nir20_path)
@@ -116,9 +114,9 @@ class NormalizedDifferenceIndex:
 
     def write_new_raster(self, operation_type):
         if operation_type == "ndvi":
-            output, metadata = self._calculate_ndvi()
+            output, metadata = self.calculate_ndvi()
         elif operation_type == "ndwi_vegetation":
-            output, metadata = self._calculate_ndwi_vegetation()
+            output, metadata = self.calculate_ndwi_vegetation()
         else:
             print("invalid operation, try again")
             return

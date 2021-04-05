@@ -59,7 +59,7 @@ class ManageRasterData:
         """
         Reproyecta una imagen al sistema de coordenadas que se le indique
         """
-        src = self._load_image(src_path)
+        src = rasterio.open(src_path)
 
         original_width = src.width
         original_height = src.height
@@ -224,4 +224,8 @@ class ManageRasterData:
 
         # reasigno los valores al objeto graticules así tiene sólo lo que me hace falta
         graticules = graticules[["gid", "coordinates", "mean_ndvi", "max_ndvi", "min_ndvi", "median_ndvi"]]
-        graticules.to_csv(data_path + "processing_results.csv")
+
+        csv_path = data_path + "processing_results.csv"
+        graticules.to_csv(csv_path)
+
+        return csv_path
