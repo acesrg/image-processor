@@ -4,4 +4,4 @@ stages:
 build-code-job:
   stage: build
   script:
-    - echo "hola"
+    - echo "test"
