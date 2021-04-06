@@ -6,7 +6,9 @@ stages:
   - statistics_calculation
 
 test_connection:
-  - ssh -i $RPI_IDENTITY pi@192.168.100.9
+  stage: test
+  script:
+    - ssh -i $RPI_IDENTITY pi@192.168.100.9
 
 
 statistics_calculation_job:
