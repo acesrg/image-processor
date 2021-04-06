@@ -30,3 +30,6 @@ statistics_calculation_job:
   artifacts:
     paths:
     - $CI_PROJECT_DIR/safo/test_images/processing_results.csv
+  tags:
+    - macos
+    - amd64
