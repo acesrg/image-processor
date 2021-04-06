@@ -6,6 +6,8 @@ stages:
 
 statistics_calculation_job:
   stage: build
+  when: manual
+  image: paulabeatrizolmedo/image-processor
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
@@ -21,6 +23,9 @@ statistics_calculation_job:
   after_script:
     - rm -rf $CI_PROJECT_DIR/images
     - ls $CI_PROJECT_DIR
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/images/processing_results.csv
   tags:
     - macos
     - amd64
