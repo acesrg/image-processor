@@ -11,11 +11,12 @@ upload_job:
   script:
     - echo "test"
     - ls $SAFO_DEFAULT_PATH
-    - cp -r $SAFO_DEFAULT_PATH/test_empty $CI_PROJECT_DIR
-  #  - ls $CI_PROJECT_DIR/safo/test_images
+    - cp -r $SAFO_DEFAULT_PATH $CI_PROJECT_DIR
+    - ls $CI_PROJECT_DIR/safo/test_images
   artifacts:
     paths:
-    - $CI_PROJECT_DIR/test_empty
+    - $CI_PROJECT_DIR/safo/test_images
+    expire_in: 1 hour
   tags:
     - rpi
     - local
@@ -25,10 +26,7 @@ statistics_calculation_job:
   image: paulabeatrizolmedo/image-processor
   when: manual
   script:
-    - ls $CI_PROJECT_DIR
-    - echo $PWD
-    - ls $PWD
-  #  - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images/
+    - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images/
   artifacts:
     paths:
     - $CI_PROJECT_DIR/safo/test_images/processing_results.csv
