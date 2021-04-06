@@ -7,7 +7,7 @@ stages:
 
 test_connection:
   stage: test
-  before-script:
+  before_script:
     - eval $(ssh-agent -s)
     - cat "$RPI_IDENTITY" | ssh-add -
     - mkdir -p ~/.ssh
