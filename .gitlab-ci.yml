@@ -1,5 +1,5 @@
 variables:
-  SAFO_DEFAULT_PATH: /home/pi/safo
+  SAFO_DEFAULT_PATH: /home/pi/safo/test_empty
 
 stages:
   - test
@@ -7,14 +7,16 @@ stages:
 
 test_connection:
   stage: test
-  script:
+  before-script:
     - eval $(ssh-agent -s)
     - cat "$RPI_IDENTITY" | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
+  script:
     - ssh -v pi@192.168.100.9
+    - scp pi@192.168.100.9:/$SAFO_DEFAULT_PATH/holis.txt $CI_PROJECT_DIR
   tags:
     - rpi
     - local
@@ -25,7 +27,8 @@ statistics_calculation_job:
   image: paulabeatrizolmedo/image-processor
   when: manual
   script:
-    - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images/
+    - ls $CI_PROJECT_DIR
+  #  - python src/service/image_processor.py --path $CI_PROJECT_DIR/safo/test_images/
   artifacts:
     paths:
     - $CI_PROJECT_DIR/safo/test_images/processing_results.csv
