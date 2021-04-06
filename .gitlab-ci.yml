@@ -20,12 +20,14 @@ statistics_calculation_job:
     - scp pi@192.168.100.9:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/images
   script:
     - python src/service/image_processor.py --path $CI_PROJECT_DIR/images/
+    - mv $CI_PROJECT_DIR/images/processing_results.csv $CI_PROJECT_DIR/
   after_script:
     - rm -rf $CI_PROJECT_DIR/images
     - ls $CI_PROJECT_DIR
   artifacts:
     paths:
-    - $CI_PROJECT_DIR/images/processing_results.csv
+    - $CI_PROJECT_DIR/processing_results.csv
+    expire_in: 1 hour
   tags:
     - macos
     - amd64
