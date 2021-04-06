@@ -9,6 +9,9 @@ test_connection:
   stage: test
   script:
     - ssh -i $RPI_IDENTITY pi@192.168.100.9
+  tags:
+    - rpi
+    - local
 
 
 statistics_calculation_job:
