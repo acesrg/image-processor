@@ -9,10 +9,10 @@ test_connection:
   stage: test
   script:
     - eval $(ssh-agent -s)
-    - echo "$RPI_IDENTITY" | tr -d '\r' | ssh-add -
+    - cat "$RPI_IDENTITY" | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - ssh -v pi@192.168.100.9
   tags:
