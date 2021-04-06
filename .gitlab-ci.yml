@@ -8,7 +8,7 @@ stages:
 test_connection:
   stage: test
   script:
-    - ssh -i $RPI_IDENTITY pi@192.168.100.9
+    - ssh -v $RPI_IDENTITY pi@192.168.100.9
   tags:
     - rpi
     - local
