@@ -8,7 +8,13 @@ stages:
 test_connection:
   stage: test
   script:
-    - ssh -v $RPI_IDENTITY pi@192.168.100.9
+    - eval $(ssh-agent -s)
+    - echo "$RPI_IDENTITY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - ssh -v pi@192.168.100.9
   tags:
     - rpi
     - local
