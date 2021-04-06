@@ -14,9 +14,12 @@ test_connection:
     - chmod 700 ~/.ssh
     - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-  script:
-    - ssh -v pi@192.168.100.9
     - scp pi@192.168.100.9:/$SAFO_DEFAULT_PATH/holis.txt $CI_PROJECT_DIR
+  script:
+    - ls $CI_PROJECT_DIR
+  after_script:
+    - rm $CI_PROJECT_DIR/holis.txt
+    - ls $CI_PROJECT_DIR
   tags:
     - rpi
     - local
