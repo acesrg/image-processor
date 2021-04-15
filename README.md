@@ -1,6 +1,6 @@
 # image-processor
 
-[![Build Status](https://travis-ci.com/paulaolmedo/image-processor.svg?token=bqY7JHfPDqjwZn2ypbwq&branch=dev)](https://travis-ci.com/paulaolmedo/image-processor)
+[![build status](https://gitlab.com/paulaolmedo/image-processor/badges/main/pipeline.svg)](https://gitlab.com/paulaolmedo/image-processor/-/commits/main)
 
 ## to build the docker image
 	docker build -f .ci/Dockerfile.original -t [some-useful-tag] .
