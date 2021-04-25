@@ -22,7 +22,7 @@ class ImageProcessor:
         return output
 
     def statistics_calculation(self):
-        self.normalized_indexes_calculation()  #  que haga el calculo que tiene que hacer
+        self.normalized_indexes_calculation()  #  que haga el calculo que tiene que hacer
         output = self.MRD.statistics_process(self.image_path, self.image_path)
 
         return output
