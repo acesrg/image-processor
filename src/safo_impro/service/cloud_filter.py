@@ -22,14 +22,18 @@ import numpy as np
 import rasterio
 from rasterio.warp import reproject, Resampling
 import scipy.ndimage
+from safo_impro.logger.log_config import LogConfig
 
 
 class CloudFilter:
     def __init__(self, images_path):
         self.images_path = images_path
+        self.logger = LogConfig().get_logger()
 
     @staticmethod
     def _calculate_bands_array(self):
+        self.logger.info("calculating bands array")
+
         with rasterio.open(self.images_path + 'blue_coast_443_60.jp2') as scl:
             B01 = scl.read()
             tmparr = np.empty_like(B01)
@@ -129,6 +133,7 @@ class CloudFilter:
         bands_array = self._calculate_bands_array(self)
         cloud_detector = S2PixelCloudDetector(threshold=0.4, average_over=4, dilation_size=2, all_bands=False)
 
+        self.logger.info("calculating the cloud mask ")
         # cloud_prob = cloud_detector.get_cloud_probability_maps(bands_array)
         cloud_mask = cloud_detector.get_cloud_masks(bands_array)
 
