@@ -211,7 +211,7 @@ class ManageRasterData:
         graticules['min_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
         graticules['median_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
 
-        #  abro el MISMO archivo que estaba leyendo con geopandas,
+        #  abro el MISMO archivo que estaba leyendo con geopandas,
         # pero especificamente como shapefile para leer correctamente el objeto que representa los polígonos
         shapefile_reader = sf.Reader(images_path + 'custom_coordinates.shp', encoding="ISO8859-1")
         polygon_coordinates = []

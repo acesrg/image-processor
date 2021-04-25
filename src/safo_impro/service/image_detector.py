@@ -21,8 +21,8 @@ import re
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from support import Support
-from normalized_indexes import NormalizedDifferenceIndex
+from safo_impro.service.manage_raster_data import ManageRasterData
+from safo_impro.service.normalized_indexes import NormalizedDifferenceIndex
 
 from inotify_simple import INotify, flags
 
@@ -56,7 +56,7 @@ class EventHandler(FileSystemEventHandler):
             print("starting ndvi calculation process...")
             ni.write_ndvi_image()
 
-            support = Support()
+            support = ManageRasterData()()
 
             src_name = 'ndvi.tif'
             original_image = images_path + src_name

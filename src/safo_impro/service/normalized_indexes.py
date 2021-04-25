@@ -20,7 +20,7 @@ import rasterio
 from rasterio import plot
 import numpy as np
 import os
-from cloud_filter import CloudFilter
+from safo_impro.service.cloud_filter import CloudFilter
 
 satellite_extensions = {
     'sentinel': '.jp2',

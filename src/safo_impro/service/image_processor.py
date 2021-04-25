@@ -1,5 +1,5 @@
-from normalized_indexes import NormalizedDifferenceIndex
-from manage_raster_data import ManageRasterData
+from safo_impro.service.normalized_indexes import NormalizedDifferenceIndex
+from safo_impro.service.manage_raster_data import ManageRasterData
 import os
 import sys
 
