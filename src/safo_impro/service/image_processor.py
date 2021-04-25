@@ -1,7 +1,6 @@
 from safo_impro.service.normalized_indexes import NormalizedDifferenceIndex
 from safo_impro.service.manage_raster_data import ManageRasterData
 import os
-import sys
 
 
 class ImageProcessor:
@@ -22,13 +21,10 @@ class ImageProcessor:
         return output
 
     def statistics_calculation(self):
-        self.normalized_indexes_calculation()  #  que haga el calculo que tiene que hacer
+        self.normalized_indexes_calculation()  # que haga el calculo que tiene que hacer
         output = self.MRD.statistics_process(self.image_path, self.image_path)
 
         return output
 
 
-IP = ImageProcessor(sys.argv[2])
-IP.statistics_calculation()
-
-# how to execute it: python src/service/image_processor.py --path {path_to_files}
+# how to execute it: python3 src/service/image_processor.py --path images/2020/2020_01/Sentinel-2/unzipped/MSIL1C_20200118.SAFE/GRANULE/MSIL1C_20200118/IMG_DATA/

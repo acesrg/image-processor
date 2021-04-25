@@ -29,6 +29,7 @@ import shapefile as sf
 import io
 import os
 import numpy as np
+from safo_impro.logger.log_config import LogConfig
 
 
 class ManageRasterData:
@@ -37,7 +38,7 @@ class ManageRasterData:
     """
 
     def __init__(self):
-        pass
+        self.logger = LogConfig().get_logger()
 
     @staticmethod
     def __load_image(path):
@@ -83,6 +84,8 @@ class ManageRasterData:
                 dst_transform=transform,
                 dst_crs=final_crs,
                 resampling=Resampling.nearest)
+
+        self.logger.info("image correctly reprojected")
 
     def crop_raster(self, coordinates, src_path, final_path):
         """
