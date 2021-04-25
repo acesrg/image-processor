@@ -26,5 +26,7 @@ class ImageProcessor:
 
         return output
 
+IP = ImageProcessor(sys.argv[2])
+IP.statistics_calculation()
 
 # how to execute it: python3 src/service/image_processor.py --path images/2020/2020_01/Sentinel-2/unzipped/MSIL1C_20200118.SAFE/GRANULE/MSIL1C_20200118/IMG_DATA/
