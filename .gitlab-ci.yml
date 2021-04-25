@@ -2,7 +2,14 @@ variables:
   SAFO_DEFAULT_PATH: /home/pi/safo/test_images
 
 stages:
+  - flake8
   - build
+
+check_linting_job:
+  stage: flake8
+  image: registry.gitlab.com/pipeline-components/flake8:latest
+  script:
+    - flake8 --ignore=E501  .
 
 statistics_calculation_job:
   stage: build
