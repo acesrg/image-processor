@@ -21,6 +21,7 @@ from rasterio import plot
 import numpy as np
 import os
 from safo_impro.service.cloud_filter import CloudFilter
+from safo_impro.logger.log_config import LogConfig
 
 satellite_extensions = {
     'sentinel': '.jp2',
@@ -40,8 +41,11 @@ class NormalizedDifferenceIndex:
         self.ndvi_path = image_path + 'ndvi.tif'
         self.ndwi_vegetation_path = image_path + 'ndwi_vegetation.tif'
         self.ndwi_water_path = image_path + 'ndwi_water_bodies.tif'
+
         self.cloud_filter = CloudFilter(image_path)
         self.image_path = image_path
+
+        self.logger = LogConfig().get_logger()
 
     @staticmethod
     def _load_image(src_path):
@@ -55,7 +59,7 @@ class NormalizedDifferenceIndex:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
         except rasterio.errors.RasterioError:
-            print("something went wrong :(")
+            self.logger.error("Exception occurred", exc_info=True)
             return
 
         red = red_frequency.read(1).astype(float)
@@ -78,7 +82,7 @@ class NormalizedDifferenceIndex:
         red_frequency.close()
         nir_frequency.close()
 
-        print("ndvi correctly calculated")
+        self.logger.info("ndvi correctly calculated")
         return ndvi, metadata
 
     def calculate_ndwi_vegetation(self):
@@ -86,7 +90,7 @@ class NormalizedDifferenceIndex:
             swir_frequency = self._load_image(self.swir_path)
             nir_frequency = self._load_image(self.nir20_path)
         except rasterio.errors.RasterioError:
-            print("something went wrong :(")
+            self.logger.error("Exception occurred", exc_info=True)
             return
 
         swir = swir_frequency.read().astype('float64')
@@ -109,16 +113,17 @@ class NormalizedDifferenceIndex:
         swir_frequency.close()
         nir_frequency.close()
 
-        print("ndwi for vegetation correctly calculated")
+        self.logger.info("ndwi for vegetation correctly calculated")
         return ndwi_vegetation, metadata
 
     def write_new_raster(self, operation_type):
+        self.logger.info(f'{operation_type} was the chosen operation.')
         if operation_type == "ndvi":
             output, metadata = self.calculate_ndvi()
         elif operation_type == "ndwi_vegetation":
             output, metadata = self.calculate_ndwi_vegetation()
         else:
-            print("invalid operation, try again")
+            self.logger.error(f'{operation_type} is an invalid operation, try again')
             return
 
         output_path = self.image_path + operation_type + ".tif"
@@ -126,7 +131,7 @@ class NormalizedDifferenceIndex:
         with rasterio.open(output_path, 'w', **metadata) as temp:
             temp.write_band(1, output.astype(rasterio.float32))
 
-        print("image correctly written: " + output_path)
+        self.logger.info(f'{output_path} -> image correctly written')
 
     def plot_ndvi_image(self, plot_name):
         ndviImage = self._load_image(self.ndvi_path)
