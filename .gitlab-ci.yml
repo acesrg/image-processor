@@ -2,7 +2,14 @@ variables:
   SAFO_DEFAULT_PATH: /home/pi/safo/test_images
 
 stages:
+  - flake8
   - build
+
+check_linting_job:
+  stage: flake8
+  image: registry.gitlab.com/pipeline-components/flake8:latest
+  script:
+    - flake8 --ignore=E501  .
 
 statistics_calculation_job:
   stage: build
@@ -17,7 +24,7 @@ statistics_calculation_job:
     - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - mkdir $CI_PROJECT_DIR/images
-    - scp pi@192.168.100.9:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/images
+    - scp $RPI_USER@$RPI_REMOTE_HOST:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/images
   script:
     - python src/service/image_processor.py --path $CI_PROJECT_DIR/images/
     - mv $CI_PROJECT_DIR/images/processing_results.csv $CI_PROJECT_DIR/
