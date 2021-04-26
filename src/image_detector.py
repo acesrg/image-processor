@@ -20,6 +20,8 @@ import os
 import re
 import time
 import logging
+import requests
+import configparser
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -39,7 +41,21 @@ class EventHandler(FileSystemEventHandler):
             if user_response == "y":
                 logging.info(":)")
                 rename_raster = RenameRaster(event.src_path)
-                rename_raster.rename_raster_file()
+                raster_path = rename_raster.rename_raster_file() # archivo donde van a parar las imágenes nuevas pero no toy segura que vaya a usar la variable
+
+                # finalmente, disparo el pipeline
+                properties = configparser.ConfigParser()
+                properties.read('safo_impro/service/constants.ini') # mmm sacar esto de acá
+
+                url = properties.get("ci_configuration", "url")
+                token = properties.get("ci_configuration", "ci_token")
+
+                payload = {'token': token}
+
+                r = requests.post(url, params=payload)
+
+                logging.info(r.text)
+
             else:
                 logging.info(":(")
             
