@@ -25,27 +25,27 @@ import configparser
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from inotify_simple import INotify, flags
 from sentinel_scripts.src.rename_sentinel_files import RenameRaster
+
 
 # esto habría que reescribirlo para que directamente tome el contenido de la clase image_processor
 # cosa de que, al detectar una imagen, el eventhandler le diga a gitlab "tengo una nueva imagen" y arranque a hacer el comando del entry point
 class EventHandler(FileSystemEventHandler):
     def on_created(self, event):
-        regex = r"(.zip)"  # TODO parametrizar / agregar un regex que represente el zip de sentinel 
+        regex = r"(.zip)"  # TODO parametrizar / agregar un regex que represente el zip de sentinel
         matches = re.finditer(regex, event.src_path)
         if matches:
             print("new raster found at: " + event.src_path)
             user_response = input("is this right? press y/n \n")
-            
+
             if user_response == "y":
                 logging.info(":)")
                 rename_raster = RenameRaster(event.src_path)
-                raster_path = rename_raster.rename_raster_file() # archivo donde van a parar las imágenes nuevas pero no toy segura que vaya a usar la variable
+                rename_raster.rename_raster_file()  #  archivo donde van a parar las imágenes nuevas pero no toy segura que vaya a usar la variable que devuelve
 
                 # finalmente, disparo el pipeline
                 properties = configparser.ConfigParser()
-                properties.read('safo_impro/service/constants.ini') # mmm sacar esto de acá
+                properties.read('safo_impro/service/constants.ini')  #  mmm sacar esto de acá
 
                 url = properties.get("ci_configuration", "url")
                 token = properties.get("ci_configuration", "ci_token")
@@ -58,7 +58,7 @@ class EventHandler(FileSystemEventHandler):
 
             else:
                 logging.info(":(")
-            
+           
 
 def image_daemon(server_path):
     logging.basicConfig(level=logging.INFO,
