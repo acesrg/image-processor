@@ -45,7 +45,7 @@ class EventHandler(FileSystemEventHandler):
 
                 # finalmente, disparo el pipeline
                 properties = configparser.ConfigParser()
-                properties.read('safo_impro/service/constants.ini')  #  mmm sacar esto de acá
+                properties.read('safo_impro/service/constants.ini')  # mmm sacar esto de acá
 
                 url = properties.get("ci_configuration", "url")
                 token = properties.get("ci_configuration", "ci_token")
@@ -58,7 +58,7 @@ class EventHandler(FileSystemEventHandler):
 
             else:
                 logging.info(":(")
-           
+
 
 def image_daemon(server_path):
     logging.basicConfig(level=logging.INFO,
