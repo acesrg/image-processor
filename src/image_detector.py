@@ -30,6 +30,7 @@ from sentinel_scripts.src.rename_sentinel_files import RenameRaster
 
 # esto habría que reescribirlo para que directamente tome el contenido de la clase image_processor
 # cosa de que, al detectar una imagen, el eventhandler le diga a gitlab "tengo una nueva imagen" y arranque a hacer el comando del entry point
+# la función de esto es disparar un pipeline en gitlab para que dada una imagen, procesarla y devolver *solamente* un .csv con la información
 class EventHandler(FileSystemEventHandler):
     def on_created(self, event):
         regex = r"(.zip)"  # TODO parametrizar / agregar un regex que represente el zip de sentinel
