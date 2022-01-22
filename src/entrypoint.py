@@ -3,4 +3,6 @@ import sys
 
 IP = ImageProcessor(sys.argv[2])
 IP.statistics_calculation()
-# how to execute it: python3 service/entrypoint.py --path $PATH_TO_RASTER_FILES
+
+# how to execute it: 
+# cd src -> python3 entrypoint.py --path $PATH_TO_RASTER_FILES
