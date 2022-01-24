@@ -38,9 +38,9 @@ class NormalizedDifferenceIndex:
         self.nir20_path = image_path + 'nir4a_865_20' + satellite_extensions[satellite]
         self.swir_path = image_path + 'swir3_1614_20' + satellite_extensions[satellite]
 
-        self.ndvi_path = image_path + 'ndvi.tif'
-        self.ndwi_vegetation_path = image_path + 'ndwi_vegetation.tif'
-        self.ndwi_water_path = image_path + 'ndwi_water_bodies.tif'
+        self.ndvi_path = image_path + 'NDVI.tif'
+        self.ndwi_vegetation_path = image_path + 'NDWI_VEGETATION.tif'
+        self.ndwi_water_path = image_path + 'NDWI_WATER_BODIES.tif'
 
         self.cloud_filter = CloudFilter(image_path)
         self.image_path = image_path
@@ -118,9 +118,9 @@ class NormalizedDifferenceIndex:
 
     def write_new_raster(self, operation_type):
         self.logger.info(f'{operation_type} was the chosen operation.')
-        if operation_type == "ndvi":
+        if operation_type == "NDVI":
             output, metadata = self.calculate_ndvi()
-        elif operation_type == "ndwi_vegetation":
+        elif operation_type == "NDWI_VEGETATION":
             output, metadata = self.calculate_ndwi_vegetation()
         else:
             self.logger.error(f'{operation_type} is an invalid operation, try again')

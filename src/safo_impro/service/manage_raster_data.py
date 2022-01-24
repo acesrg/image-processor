@@ -212,7 +212,7 @@ class ManageRasterData:
         return masked
 
     # lo que hace esta función es calcular el índice que se le indique, en cuadrantes según el .shp
-    def statistics_process(self, data_path, images_path):
+    def statistics_process(self, data_path, images_path, operation):
         """
         función que culmina el procesamiento de las imágenes
         calcula valores estadísticos a partir de zonas en un determinado raster
@@ -222,7 +222,8 @@ class ManageRasterData:
         definir cuál va a ser la salida, si un shp o un csv. porque dependiendo de cómo se quieran mostrar los resultos conviene uno u otro
         (al csv se lo puede leer sólo con pandas, en cambio al shp se lo puede leer con geopandas y operar con las coordenadas de manera más transparante)
         """
-        raster = rasterio.open(images_path + 'ndvi-masked.tif')  # acá lo mismo que abajo, no debería
+        img_path = "{image_path}{operation}-MASKED.tif".format(image_path=images_path, operation=operation)
+        raster = rasterio.open(img_path)  # acá lo mismo que abajo, no debería
         graticules = gpd.read_file(data_path + 'custom_coordinates.shp')
 
         # acá tendría que calcularle según sea necesario, no solamente el ndvi -> arreglar asap
