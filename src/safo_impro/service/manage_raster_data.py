@@ -227,10 +227,10 @@ class ManageRasterData:
         graticules = gpd.read_file(data_path + 'custom_coordinates.shp')
 
         # acá tendría que calcularle según sea necesario, no solamente el ndvi -> arreglar asap
-        graticules['mean_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
-        graticules['max_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.max)
-        graticules['min_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
-        graticules['median_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
+        graticules['mean'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
+        graticules['median'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
+        graticules['min_index'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
+        graticules['max_index'] = graticules.geometry.apply(self.stats, data=raster).apply(np.max)
 
         #  abro el MISMO archivo que estaba leyendo con geopandas,
         # pero especificamente como shapefile para leer correctamente el objeto que representa los polígonos
@@ -242,9 +242,10 @@ class ManageRasterData:
             polygon_coordinates.append(bbox)
 
         # reasigno los valores al objeto graticules así tiene sólo lo que me hace falta
-        graticules = graticules[["gid", "geometry", "mean_ndvi", "max_ndvi", "min_ndvi", "median_ndvi"]]
+        graticules = graticules[["gid", "geometry", "mean", "median", "min_index", "max_index"]]
+        graticules = graticules.dropna()
 
-        shp_path = data_path + "processing_results.shp"
+        shp_path = "{data_path}{operation}-results.shp".format(data_path = data_path, operation = operation)
         graticules.to_file(shp_path)
 
         return shp_path
