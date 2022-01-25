@@ -1,14 +1,16 @@
 from safo_impro.service.normalized_indexes import NormalizedDifferenceIndex
 from safo_impro.service.manage_raster_data import ManageRasterData
 import os
+import logging
 
 
 class ImageProcessor:
-    def __init__(self, image_path, operation):
+    def __init__(self, image_path, operation, logging_level):
         self.image_path = image_path
         self.operation = operation
         self.NI = NormalizedDifferenceIndex(self.image_path, 'sentinel')
         self.MRD = ManageRasterData()
+        self.logger = self.set_logging_level(logging_level)
 
     def normalized_indexes_calculation(self):
         """
@@ -33,13 +35,14 @@ class ImageProcessor:
             este es el primer paso
             primero calcula el ndvi en general
             y luego le saca las estadísticas
-
-            @WIP
-            habría que agregar un paso al medio para que enmascare lo que no tiene que calcular
-            eso por un lado sería mas fácil rápido? para hacer los calculos
-            pero por el otro lado sería más fácil agarrarlo al final una vez que está calculado el ndvi porque es una sola capa...
         """
         self.normalized_indexes_calculation()  # que haga el calculo que tiene que hacer
         output = self.MRD.statistics_process(self.image_path, self.image_path, self.operation)
 
         return output
+
+    def set_logging_level(self, logging_level):
+        logger = logging.getLogger()
+        logger.setLevel(logging_level)
+
+        return logger
