@@ -22,17 +22,17 @@ parser.add_argument(
 args = parser.parse_args()
 
 level = ''
-if args.log_level == None:
+if args.log_level is None:
     level = 'INFO'
 else:
     level = args.log_level
 
 level_dict = {
-    'CRITICAL' : logging.CRITICAL,
-    'ERROR' : logging.ERROR,
-    'WARNING' : logging.WARNING,
+    'CRITICAL': logging.CRITICAL,
+    'ERROR': logging.ERROR,
+    'WARNING': logging.WARNING,
     'DEBUG': logging.DEBUG,
-    'INFO' : logging.INFO,
+    'INFO': logging.INFO,
 }
 
 IP = ImageProcessor(args.path, args.operation, level_dict[level])
