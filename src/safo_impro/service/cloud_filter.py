@@ -1,16 +1,39 @@
+#
+# Copyright (c) 2021 PAULA B. OLMEDO.
+#
+# This file is part of IMAGE_PROCESSOR
+# (see https://github.com/paulaolmedo/image-processor).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public Licens
+# along with this program. If not, see <http://www.gnu.org/licenses/>.#
+
 from s2cloudless import S2PixelCloudDetector
 import numpy as np
 import rasterio
 from rasterio.warp import reproject, Resampling
 import scipy.ndimage
+from safo_impro.logger.log_config import LogConfig
 
 
 class CloudFilter:
     def __init__(self, images_path):
         self.images_path = images_path
+        self.logger = LogConfig().get_logger()
 
     @staticmethod
     def _calculate_bands_array(self):
+        self.logger.info("calculating bands array")
+
         with rasterio.open(self.images_path + 'blue_coast_443_60.jp2') as scl:
             B01 = scl.read()
             tmparr = np.empty_like(B01)
@@ -110,6 +133,7 @@ class CloudFilter:
         bands_array = self._calculate_bands_array(self)
         cloud_detector = S2PixelCloudDetector(threshold=0.4, average_over=4, dilation_size=2, all_bands=False)
 
+        self.logger.info("calculating the cloud mask ")
         # cloud_prob = cloud_detector.get_cloud_probability_maps(bands_array)
         cloud_mask = cloud_detector.get_cloud_masks(bands_array)
 

@@ -2,7 +2,11 @@
 
 [![build status](https://gitlab.com/paulaolmedo/image-processor/badges/main/pipeline.svg)](https://gitlab.com/paulaolmedo/image-processor/-/commits/main)
 
-## to build the docker image
-	docker build -f .ci/Dockerfile.original -t [some-useful-tag] .
-## and then run it...
-	docker run --rm -it -v $(pwd):/home/project -w /home/project -t [some-useful-tag] bash
+# Running instructions
+## image_processor core
+	docker run --rm -it -v $(pwd):/home/project -w /home/project paulabeatrizolmedo/image-processor bash
+
+Once inside the container, execute the entrypoint file, with the corresponding options (see entrypoint --help)
+
+## image_processor with jupyter
+	docker run --rm -it -v $(pwd):/home/project -w /home/project -p 8888:8888 -t paulabeatrizolmedo/ip-jupyter

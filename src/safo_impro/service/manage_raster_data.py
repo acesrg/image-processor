@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.#
 import rasterio
+import fiona
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from rasterio.mask import mask
 from shapely.geometry import box
@@ -29,15 +30,18 @@ import shapefile as sf
 import io
 import os
 import numpy as np
+from safo_impro.logger.log_config import LogConfig
 
 
 class ManageRasterData:
     """
     Clase que tiene todos los métodos de soporte para manipular los raster
+    @WIP
+    arreglar los imports
     """
 
     def __init__(self):
-        pass
+        self.logger = LogConfig().get_logger()
 
     @staticmethod
     def __load_image(path):
@@ -83,6 +87,8 @@ class ManageRasterData:
                 dst_transform=transform,
                 dst_crs=final_crs,
                 resampling=Resampling.nearest)
+
+        self.logger.info("image correctly reprojected")
 
     def crop_raster(self, coordinates, src_path, final_path):
         """
@@ -156,10 +162,14 @@ class ManageRasterData:
                 i = i + 1
                 self.crop_raster(coordinates, original_image, cropped_path)
 
-    # esto tiene que tomar un raster ya reproyectado ¡!
-    # TODO definir cuándo hacerlo
-    # TODO testearlo acá (ver jupyter cualquier cosa)
     def parse_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
+        """
+        dado un shapefile con POLÍGONOS, toma sólo aquellos que estén contenidos por el raster del mismo sistema de coordenadas.
+        @WIP
+        re-definir parámetros
+        definir cuándo se realiza éste proceso
+        definir los errores -> uno que está corregido en una notebook es de fijarse de si todas las entradas del shp son válidas, xq a veces vienen corruptos
+        """
         shapefile_path = data_path + shapefile_name
         source = sf.Reader(shapefile_path, encoding=encoding_type)
 
@@ -186,7 +196,7 @@ class ManageRasterData:
             x_min = abs(shp_borders[0])
             y_min = abs(shp_borders[1])
             x_max = abs(shp_borders[2])
-            y_max = abs(shp_borders[2])
+            y_max = abs(shp_borders[3])
 
             # fijarse si hay alguna forma mejor de hacer esto
             if x_min <= x_bound_min and x_min >= x_bound_max and y_min <= y_bound_min and y_min >= y_bound_max:
@@ -201,17 +211,28 @@ class ManageRasterData:
         masked, mask_transform = mask(dataset=data, shapes=(geom,), crop=True, all_touched=True, filled=True)
         return masked
 
-    def statistics_process(self, data_path, images_path):
-        raster = rasterio.open(images_path + 'ndvi-reprojected.tif')  # acá lo mismo que abajo, no debería
+    # lo que hace esta función es calcular el índice que se le indique, en cuadrantes según el .shp
+    def statistics_process(self, data_path, images_path, operation):
+        """
+        función que culmina el procesamiento de las imágenes
+        calcula valores estadísticos a partir de zonas en un determinado raster
+        @WIP
+        definir parámetros
+        definir si hacer dropna() acá o en el momento del análisis
+        definir cuál va a ser la salida, si un shp o un csv. porque dependiendo de cómo se quieran mostrar los resultos conviene uno u otro
+        (al csv se lo puede leer sólo con pandas, en cambio al shp se lo puede leer con geopandas y operar con las coordenadas de manera más transparante)
+        """
+        img_path = "{image_path}{operation}-MASKED.tif".format(image_path=images_path, operation=operation)
+        raster = rasterio.open(img_path)  # acá lo mismo que abajo, no debería
         graticules = gpd.read_file(data_path + 'custom_coordinates.shp')
 
         # acá tendría que calcularle según sea necesario, no solamente el ndvi -> arreglar asap
-        graticules['mean_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
-        graticules['max_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.max)
-        graticules['min_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
-        graticules['median_ndvi'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
+        graticules['mean'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
+        graticules['median'] = graticules.geometry.apply(self.stats, data=raster).apply(np.median)
+        graticules['min_index'] = graticules.geometry.apply(self.stats, data=raster).apply(np.min)
+        graticules['max_index'] = graticules.geometry.apply(self.stats, data=raster).apply(np.max)
 
-        #  abro el MISMO archivo que estaba leyendo con geopandas,
+        #  abro el MISMO archivo que estaba leyendo con geopandas,
         # pero especificamente como shapefile para leer correctamente el objeto que representa los polígonos
         shapefile_reader = sf.Reader(images_path + 'custom_coordinates.shp', encoding="ISO8859-1")
         polygon_coordinates = []
@@ -220,12 +241,35 @@ class ManageRasterData:
             bbox = shaperec.shape.bbox  # devuelve un objeto que representa las coordenadas de esa gratícula AKA parcela según la gente normal
             polygon_coordinates.append(bbox)
 
-        graticules['coordinates'] = polygon_coordinates
-
         # reasigno los valores al objeto graticules así tiene sólo lo que me hace falta
-        graticules = graticules[["gid", "coordinates", "mean_ndvi", "max_ndvi", "min_ndvi", "median_ndvi"]]
+        graticules = graticules[["gid", "geometry", "mean", "median", "min_index", "max_index"]]
+        graticules = graticules.dropna()
 
-        csv_path = data_path + "processing_results.csv"
-        graticules.to_csv(csv_path)
+        shp_path = "{data_path}{operation}-results.shp".format(data_path=data_path, operation=operation)
+        graticules.to_file(shp_path)
 
-        return csv_path
+        return shp_path
+
+    def calculate_specifics_mask(self, src_path, final_path):
+        """
+        función que enmascara el raster para evitar sacar estadísticas de cosas como edificios, cuerpos de agua, etc
+        @WIP
+        definir parámetros
+        """
+        with fiona.open('/home/project/test_images/unzipped/MSIL1C_20220106.SAFE/GRANULE/MSIL1C_20220106/IMG_DATA/custom_buildings.shp', 'r') as shapefile:
+            shapes = [feature["geometry"] for feature in shapefile]
+
+        with fiona.open('/home/project/test_images/unzipped/MSIL1C_20220106.SAFE/GRANULE/MSIL1C_20220106/IMG_DATA/custom_water.shp', 'r') as shapefile:
+            shapes = [feature["geometry"] for feature in shapefile]
+
+        with rasterio.open(src_path) as src:
+            out_image, out_transform = rasterio.mask.mask(src, shapes, invert=True)
+            out_meta = src.meta
+
+        out_meta.update({"driver": "GTiff",
+                         "height": out_image.shape[1],
+                         "width": out_image.shape[2],
+                         "transform": out_transform})
+
+        with rasterio.open(final_path, "w", **out_meta) as dest:
+            dest.write(out_image)

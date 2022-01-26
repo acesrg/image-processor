@@ -1,17 +1,5 @@
-FROM python:3.9.3-slim-buster
+FROM paulabeatrizolmedo/image-processor
 
-#librerías necesarias
-#RUN pip install rasterio geopandas pycrs watchdog inotify_simple
-
-RUN apt-get install gdal-bin libgdal-dev
-RUN pip install -U pip
-
-
-COPY src/requirements.txt .
-RUN pip install -r requirements.txt
 RUN pip install jupyter
-
-#seteo esta variable porque estoy trayendo el gdal de manera externa y no compilandolo con gcc
-ENV GDAL_DATA=/usr/local/lib/python3.9/site-packages/fiona/gdal_data
 
 CMD ["jupyter", "notebook", "--port=8888", "--no-browser", "--ip=0.0.0.0", "--allow-root"]
