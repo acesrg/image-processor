@@ -245,7 +245,7 @@ class ManageRasterData:
         graticules = graticules[["gid", "geometry", "mean", "median", "min_index", "max_index"]]
         graticules = graticules.dropna()
 
-        shp_path = "{data_path}{operation}-results.shp".format(data_path = data_path, operation = operation)
+        shp_path = "{data_path}{operation}-results.shp".format(data_path=data_path, operation=operation)
         graticules.to_file(shp_path)
 
         return shp_path
