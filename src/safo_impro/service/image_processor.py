@@ -5,7 +5,8 @@ import logging
 
 
 class ImageProcessor:
-    def __init__(self, image_path, operation, logging_level):
+    def __init__(self, shp_path, image_path, operation, logging_level):
+        self.shp_path = shp_path
         self.image_path = image_path
         self.operation = operation
         self.NI = NormalizedDifferenceIndex(self.image_path, 'sentinel')
@@ -15,7 +16,7 @@ class ImageProcessor:
     def normalized_indexes_calculation(self):
         """
         calculates the corresponding normalized indexes, and reprojects them
-        @WIP: parameters to add: filename, coordinate system (nice to have)
+        @WIP: parameters to add: coordinate system (nice to have)
         """
         self.NI.write_new_raster(self.operation)
 
@@ -36,8 +37,9 @@ class ImageProcessor:
             primero calcula el ndvi en general
             y luego le saca las estadísticas
         """
-        self.normalized_indexes_calculation()  # que haga el calculo que tiene que hacer
-        output = self.MRD.statistics_process(self.image_path, self.image_path, self.operation)
+        raster_name = self.normalized_indexes_calculation()
+        self.MRD.parse_coordinates_from_shapefile(self.shp_path, self.image_path, raster_name, "ISO8859-1")
+        output = self.MRD.statistics_process(self.image_path, self.operation)
 
         return output
 
