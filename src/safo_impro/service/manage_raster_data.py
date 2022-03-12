@@ -246,9 +246,15 @@ class ManageRasterData:
         graticules = graticules[["gid", "geometry", "mean", "median", "min_index", "max_index"]]
         graticules = graticules.dropna()
 
-        shp_path = "{data_path}{operation}-results.shp".format(data_path=images_path, operation=operation)
+        shp_path = "{data_path}{operation}-partial-results.shp".format(
+            data_path=images_path, operation=operation)
+
         graticules.to_file(shp_path)
-        self.logger.info(f"{shp_path} -> processing results correctly stored")
+
+        self.logger.info(
+            f"{shp_path} -> processing *partial* results correctly stored")
+
+        self.calculate_status_with_threshold(shp_path, images_path, operation)
 
         return shp_path
 
@@ -275,3 +281,28 @@ class ManageRasterData:
 
         with rasterio.open(final_path, "w", **out_meta) as dest:
             dest.write(out_image)
+
+    def calculate_status_with_threshold(self, results_file, images_path, operation):
+        results = gpd.read_file(results_file)
+        status = ""
+
+        for mean in results['mean']:
+            if mean < 0:
+                status = "dead"
+            elif mean > 0 and mean <= 0.3:
+                status = "stressed"
+            elif mean > 0.3 and mean <= 0.7:
+                status = "barely_health"
+            elif mean > 0.7 and mean < 1:
+                status = "healthy"
+
+        results["status"] = status
+
+        results = results[["gid", "geometry", "mean", "status"]]
+
+        shp_path = "{data_path}{operation}-results.shp".format(
+            data_path=images_path, operation=operation)
+        results.to_file(shp_path)
+        self.logger.info(f"{shp_path} -> processing results correctly stored")
+
+        return shp_path
