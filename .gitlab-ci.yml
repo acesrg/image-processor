@@ -1,8 +1,9 @@
 variables:
-  SAFO_DEFAULT_PATH: /home/pi/safo/test_images
+  SAFO_DEFAULT_PATH: /home/pi/safo/
 
 stages:
   - flake8
+  - test
   - build
 
 check_linting_job:
@@ -10,6 +11,26 @@ check_linting_job:
   image: registry.gitlab.com/pipeline-components/flake8:latest
   script:
     - flake8 --ignore=E501  .
+
+test:
+  image: paulabeatrizolmedo/image-processor
+  stage: test
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - cat "$RPI_IDENTITY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - mkdir $CI_PROJECT_DIR/test_resources
+    - scp $RPI_USER@$RPI_REMOTE_HOST:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/test_resources
+  script:
+    - ls
+    - python3 -m unittest discover -v -s src/safo_impro/tests/
+  tags:
+    - local
+    - amd64
 
 statistics_calculation_job:
   stage: build
@@ -37,5 +58,5 @@ statistics_calculation_job:
     - $CI_PROJECT_DIR/processing_results.csv
     expire_in: 1 hour
   tags:
-    - macos
+    - local
     - amd64
