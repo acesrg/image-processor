@@ -31,6 +31,8 @@ test:
   tags:
     - local
     - amd64
+    - armv7
+    - rpi
 
 statistics_calculation_job:
   stage: build
