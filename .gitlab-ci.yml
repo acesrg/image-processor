@@ -28,11 +28,6 @@ test:
   script:
     - ls
     - python3 -m unittest discover -v -s src/safo_impro/tests/
-  tags:
-    - local
-    - amd64
-    - armv7
-    - rpi
 
 statistics_calculation_job:
   stage: build
