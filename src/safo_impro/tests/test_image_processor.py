@@ -3,10 +3,10 @@ import logging
 from safo_impro.service.image_processor import ImageProcessor
 from safo_impro.service.normalized_indexes import Error
 
-SHPFILE_PATH = ""
-IMAGE_PATH = ""
+SHPFILE_PATH = "/home/pi/paula/safo/cartas_25000/cartas_25000.shp"
+IMAGE_PATH = "/home/pi/paula/safo/img/CBA_2021_0105/Sentinel-2/unzipped/MSIL1C_20210107.SAFE/GRANULE/MSIL1C_20210107/IMG_DATA/"
 
-EXPECTED_RESULTS = ""
+EXPECTED_RESULTS = "/home/pi/paula/safo/img/CBA_2021_0105/Sentinel-2/unzipped/MSIL1C_20210107.SAFE/GRANULE/MSIL1C_20210107/IMG_DATA/NDVI-results.shp"
 
 
 MISSING_IMAGE_PATH = "/missing_path/"
