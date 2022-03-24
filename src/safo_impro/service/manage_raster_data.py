@@ -254,9 +254,10 @@ class ManageRasterData:
         self.logger.info(
             f"{shp_path} -> processing *partial* results correctly stored")
 
-        self.calculate_status_with_threshold(shp_path, images_path, operation)
+        results = self.calculate_status_with_threshold(
+            shp_path, images_path, operation)
 
-        return shp_path
+        return results
 
     def calculate_specifics_mask(self, src_path, final_path):
         """
@@ -303,6 +304,11 @@ class ManageRasterData:
         shp_path = "{data_path}{operation}-results.shp".format(
             data_path=images_path, operation=operation)
         results.to_file(shp_path)
+
+        csv_path = "{data_path}{operation}-results.csv".format(
+            data_path=images_path, operation=operation)
+        results.to_csv(csv_path)
+
         self.logger.info(f"{shp_path} -> processing results correctly stored")
 
         return shp_path
