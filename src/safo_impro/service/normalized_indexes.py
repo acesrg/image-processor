@@ -29,6 +29,9 @@ satellite_extensions = {
 }
 
 
+class Error(Exception):
+    pass
+
 class NormalizedDifferenceIndex:
     def __init__(self, image_path, satellite):
         self.red_path = image_path + 'red_665_10' + satellite_extensions[satellite]
@@ -52,15 +55,15 @@ class NormalizedDifferenceIndex:
         if os.path.isfile(src_path) is True:
             return rasterio.open(src_path)
         else:
-            print("no such file " + src_path)
+            raise Error("No such file: " + src_path)
 
     def calculate_ndvi(self):
         try:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
-        except rasterio.errors.RasterioError:
+        except Exception:
             self.logger.error("Exception occurred", exc_info=True)
-            return
+            raise Error("Exception ocurred while loading the files")
 
         red = red_frequency.read(1).astype(float)
         nir = nir_frequency.read(1).astype(float)
@@ -89,9 +92,9 @@ class NormalizedDifferenceIndex:
         try:
             swir_frequency = self._load_image(self.swir_path)
             nir_frequency = self._load_image(self.nir20_path)
-        except rasterio.errors.RasterioError:
+        except Exception:
             self.logger.error("Exception occurred", exc_info=True)
-            return
+            raise Error("Exception ocurred while loading the files")
 
         swir = swir_frequency.read().astype('float64')
         nir = nir_frequency.read().astype('float64')
@@ -124,7 +127,7 @@ class NormalizedDifferenceIndex:
             output, metadata = self.calculate_ndwi_vegetation()
         else:
             self.logger.error(f'{operation_type} is an invalid operation, try again')
-            return
+            raise Error(f'{operation_type} is an invalid operation, try again')
 
         output_path = self.image_path + operation_type + ".tif"
 
