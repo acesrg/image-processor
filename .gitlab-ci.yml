@@ -24,7 +24,7 @@ test:
     - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - mkdir $CI_PROJECT_DIR/test_resources
-    - scp $RPI_USER@$RPI_REMOTE_HOST:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/test_resources
+    - scp -v $RPI_USER@$RPI_REMOTE_HOST:/$SAFO_DEFAULT_PATH/* $CI_PROJECT_DIR/test_resources
   script:
     - ls
     - python3 -m unittest discover -v -s src/safo_impro/tests/
