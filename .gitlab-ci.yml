@@ -18,7 +18,7 @@ test:
   before_script:
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
     - eval $(ssh-agent -s)
-    - cat "$RPI_IDENTITY" | ssh-add -
+    - cat "$RPI_NEW_IDENTITY" | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - cat "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
