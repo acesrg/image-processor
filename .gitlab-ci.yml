@@ -31,7 +31,6 @@ test:
   tags:
     - amd64
     - local
-    - fedora
 
 statistics_calculation_job:
   stage: build
