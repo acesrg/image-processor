@@ -29,9 +29,9 @@ test:
     - ls
     - python3 -m unittest discover -v -s src/safo_impro/tests/
   tags:
-    - armv7
+    - amd64
     - local
-    - rpi
+    - fedora
 
 statistics_calculation_job:
   stage: build
