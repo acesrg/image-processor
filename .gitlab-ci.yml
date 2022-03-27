@@ -26,8 +26,8 @@ test:
     - mkdir $CI_PROJECT_DIR/test_resources
     - scp -r -v $RPI_USER@$RPI_REMOTE_HOST:$SAFO_DEFAULT_PATH/test_images $CI_PROJECT_DIR/test_resources
   script:
-    - ls
-    - python3 -m unittest discover -v -s src/safo_impro/tests/
+    - cd src/
+    - python3 -m unittest discover -v -s safo_impro/tests/
   tags:
     - amd64
     - local
