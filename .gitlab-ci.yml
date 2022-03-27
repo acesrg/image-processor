@@ -1,5 +1,5 @@
 variables:
-  SAFO_DEFAULT_PATH: /home/pi/safo/
+  SAFO_DEFAULT_PATH: /home/pi/safo
 
 stages:
   - flake8
