@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import unittest
 import logging
 from safo_impro.service.image_processor import ImageProcessor
