@@ -129,7 +129,7 @@ class NormalizedDifferenceIndex:
         self.logger.info(f'{operation_type} was the chosen operation.')
         if operation_type == "NDVI":
             output, metadata = self.calculate_ndvi()
-        elif operation_type == "NDWI_VEGETATION":
+        elif operation_type == "NDWI":
             output, metadata = self.calculate_ndwi_vegetation()
         else:
             self.logger.error(
