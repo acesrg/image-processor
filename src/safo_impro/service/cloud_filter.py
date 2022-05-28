@@ -129,15 +129,20 @@ class CloudFilter:
                                     B11[0] / 10000.0, B12[0] / 10000.0))])
         return bands
 
-    def calculate_cloud_mask(self):
+    def calculate_cloud_mask(self, operation):
         bands_array = self._calculate_bands_array(self)
-        cloud_detector = S2PixelCloudDetector(threshold=0.4, average_over=4, dilation_size=2, all_bands=False)
+        cloud_detector = S2PixelCloudDetector(
+            threshold=0.4, average_over=4, dilation_size=2, all_bands=False)
 
         self.logger.info("calculating the cloud mask ")
         # cloud_prob = cloud_detector.get_cloud_probability_maps(bands_array)
         cloud_mask = cloud_detector.get_cloud_masks(bands_array)
 
-        resized_mask = scipy.ndimage.zoom(cloud_mask[0], 6, mode='nearest')
+        zoom = 6
+        if operation == "NDWI":
+            zoom = 3
+
+        resized_mask = scipy.ndimage.zoom(cloud_mask[0], zoom, mode='nearest')
         temp = np.multiply(resized_mask, -1)
 
         resized_mask_invertida = np.add(temp, 1)
