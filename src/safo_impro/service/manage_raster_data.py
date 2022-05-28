@@ -286,16 +286,30 @@ class ManageRasterData:
     def calculate_status_with_threshold(self, results_file, images_path, operation):
         results = gpd.read_file(results_file)
         status = []
-
-        for mean in results['mean']:
-            if mean < 0:
-                status.append("dead")
-            elif mean > 0 and mean <= 0.3:
-                status.append("stressed")
-            elif mean > 0.3 and mean <= 0.7:
-                status.append("barely_healthy")
-            elif mean > 0.7 and mean < 1:
-                status.append("healthy")
+        print("operation" + operation)
+        if operation == "NDVI":
+            for mean in results['mean']:
+                if mean < 0:
+                    status.append("dead")
+                elif mean > 0 and mean <= 0.3:
+                    status.append("stressed")
+                elif mean > 0.3 and mean <= 0.7:
+                    status.append("barely_healthy")
+                elif mean > 0.7 and mean < 1:
+                    status.append("healthy")
+        elif operation == "NDWI":
+            for mean in results['mean']:
+                print(mean)
+                if mean < -0.1:
+                    status.append("regrowth")
+                elif mean > -0.1 and mean <= 0.1:
+                    status.append("unburned")
+                elif mean > 0.1 and mean <= 0.27:
+                    status.append("low_severity")
+                elif mean > 0.27 and mean < 0.66:
+                    status.append("moderate_severity")
+                elif mean > 0.66:
+                    status.append("high_severity")
 
         results["status"] = status
 

@@ -70,7 +70,7 @@ class NormalizedDifferenceIndex:
         red = red_frequency.read(1).astype(float)
         nir = nir_frequency.read(1).astype(float)
 
-        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+        cloud_mask = self.cloud_filter.calculate_cloud_mask("NDVI")
 
         red_masked = np.multiply(cloud_mask, red)
         nir_masked = np.multiply(cloud_mask, nir)
@@ -103,7 +103,7 @@ class NormalizedDifferenceIndex:
         swir = swir_frequency.read().astype('float64')
         nir = nir_frequency.read().astype('float64')
 
-        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+        cloud_mask = self.cloud_filter.calculate_cloud_mask("NDWI")
 
         swir_masked = np.multiply(cloud_mask, swir)
         nir_masked = np.multiply(cloud_mask, nir)
@@ -140,7 +140,10 @@ class NormalizedDifferenceIndex:
         output_path = self.image_path + operation_type + ".tif"
 
         with rasterio.open(output_path, 'w', **metadata) as temp:
-            temp.write_band(1, output.astype(rasterio.float32))
+            if operation_type == "NDVI":
+                temp.write_band(1, output.astype(rasterio.float32))
+            elif operation_type == "NDWI":
+                temp.write(output.astype(rasterio.float32))
 
         self.logger.info(f'{output_path} -> image correctly written')
 
