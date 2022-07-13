@@ -1,12 +1,18 @@
 import argparse
 import logging
+from os.path import exists
 from safo_impro.service.image_processor import ImageProcessor
 
 parser = argparse.ArgumentParser(description="Image processor")
 
 parser.add_argument(
-    '-p', '--path', type=str, required=True,
+    '-ip', '--image_path', type=str, required=True,
     help='Folder location of the raster.',
+)
+
+parser.add_argument(
+    '-sp', '--shp_path', type=str, required=True,
+    help='Folder location of the polygons file.',
 )
 
 parser.add_argument(
@@ -35,5 +41,15 @@ level_dict = {
     'INFO': logging.INFO,
 }
 
-IP = ImageProcessor(args.path, args.operation, level_dict[level])
+shp_path = args.shp_path
+image_path = args.image_path
+
+if not exists(shp_path):
+    print("No such file: " + shp_path)
+    quit()
+elif not exists(image_path):
+    print("No such file: " + image_path)
+    quit()
+
+IP = ImageProcessor(args.shp_path, args.image_path, args.operation, level_dict[level])
 IP.statistics_calculation()

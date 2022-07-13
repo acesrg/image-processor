@@ -1,5 +1,6 @@
 import logging
 import logging.config
+from os import path
 
 
 class LogConfig:
@@ -7,5 +8,10 @@ class LogConfig:
         pass
 
     def get_logger(self):
-        logging.config.fileConfig(fname='safo_impro/logger/logger.conf', disable_existing_loggers=False)
+        logger_configuration = path.join(path.dirname(
+            path.abspath(__file__)), 'logger.conf')
+
+        logging.config.fileConfig(
+            fname=logger_configuration, disable_existing_loggers=False)
+
         return logging.getLogger(__name__)

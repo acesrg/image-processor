@@ -31,12 +31,17 @@ satellite_extensions = {
 
 class NormalizedDifferenceIndex:
     def __init__(self, image_path, satellite):
-        self.red_path = image_path + 'red_665_10' + satellite_extensions[satellite]
-        self.green_path = image_path + 'green_560_10' + satellite_extensions[satellite]
-        self.nir10_path = image_path + 'nir4_832_10' + satellite_extensions[satellite]
+        self.red_path = image_path + 'red_665_10' + \
+            satellite_extensions[satellite]
+        self.green_path = image_path + 'green_560_10' + \
+            satellite_extensions[satellite]
+        self.nir10_path = image_path + 'nir4_832_10' + \
+            satellite_extensions[satellite]
 
-        self.nir20_path = image_path + 'nir4a_865_20' + satellite_extensions[satellite]
-        self.swir_path = image_path + 'swir3_1614_20' + satellite_extensions[satellite]
+        self.nir20_path = image_path + 'nir4a_865_20' + \
+            satellite_extensions[satellite]
+        self.swir_path = image_path + 'swir3_1614_20' + \
+            satellite_extensions[satellite]
 
         self.ndvi_path = image_path + 'NDVI.tif'
         self.ndwi_vegetation_path = image_path + 'NDWI_VEGETATION.tif'
@@ -52,28 +57,30 @@ class NormalizedDifferenceIndex:
         if os.path.isfile(src_path) is True:
             return rasterio.open(src_path)
         else:
-            print("no such file " + src_path)
+            raise FileNotFoundError("No such file: " + src_path)
 
     def calculate_ndvi(self):
         try:
             red_frequency = self._load_image(self.red_path)
             nir_frequency = self._load_image(self.nir10_path)
-        except rasterio.errors.RasterioError:
+        except FileNotFoundError:
             self.logger.error("Exception occurred", exc_info=True)
-            return
+            raise
 
         red = red_frequency.read(1).astype(float)
         nir = nir_frequency.read(1).astype(float)
 
-        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+        cloud_mask = self.cloud_filter.calculate_cloud_mask("NDVI")
 
         red_masked = np.multiply(cloud_mask, red)
         nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndvi_temp = np.where((nir_masked - red_masked) == 0., 0, (nir_masked - red_masked) / (nir_masked + red_masked))
+        ndvi_temp = np.where((nir_masked - red_masked) == 0., 0,
+                             (nir_masked - red_masked) / (nir_masked + red_masked))
 
-        cloud_mask_NaN = np.multiply(cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
+        cloud_mask_NaN = np.multiply(
+            cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
         ndvi = np.multiply(cloud_mask_NaN, ndvi_temp)
 
         metadata = red_frequency.meta
@@ -89,22 +96,24 @@ class NormalizedDifferenceIndex:
         try:
             swir_frequency = self._load_image(self.swir_path)
             nir_frequency = self._load_image(self.nir20_path)
-        except rasterio.errors.RasterioError:
+        except FileNotFoundError:
             self.logger.error("Exception occurred", exc_info=True)
-            return
+            raise
 
         swir = swir_frequency.read().astype('float64')
         nir = nir_frequency.read().astype('float64')
 
-        cloud_mask = self.cloud_filter.calculate_cloud_mask()
+        cloud_mask = self.cloud_filter.calculate_cloud_mask("NDWI")
 
         swir_masked = np.multiply(cloud_mask, swir)
         nir_masked = np.multiply(cloud_mask, nir)
 
         np.seterr(divide='ignore', invalid='ignore')
-        ndwi_vegetation_temp = np.where((nir_masked - swir_masked) == 0., 0, (nir_masked - swir_masked) / (nir_masked + swir_masked))  # water content in vegetation
+        ndwi_vegetation_temp = np.where((nir_masked - swir_masked) == 0., 0, (nir_masked - swir_masked) / (
+            nir_masked + swir_masked))  # water content in vegetation
 
-        cloud_mask_NaN = np.multiply(cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
+        cloud_mask_NaN = np.multiply(
+            cloud_mask, np.where(cloud_mask == 0, float("nan"), 1))
         ndwi_vegetation = np.multiply(cloud_mask_NaN, ndwi_vegetation_temp)
 
         metadata = swir_frequency.meta
@@ -120,16 +129,21 @@ class NormalizedDifferenceIndex:
         self.logger.info(f'{operation_type} was the chosen operation.')
         if operation_type == "NDVI":
             output, metadata = self.calculate_ndvi()
-        elif operation_type == "NDWI_VEGETATION":
+        elif operation_type == "NDWI":
             output, metadata = self.calculate_ndwi_vegetation()
         else:
-            self.logger.error(f'{operation_type} is an invalid operation, try again')
-            return
+            self.logger.error(
+                f'{operation_type} is an invalid operation, try again')
+            raise ValueError(
+                f'{operation_type} is an invalid operation, try again')
 
         output_path = self.image_path + operation_type + ".tif"
 
         with rasterio.open(output_path, 'w', **metadata) as temp:
-            temp.write_band(1, output.astype(rasterio.float32))
+            if operation_type == "NDVI":
+                temp.write_band(1, output.astype(rasterio.float32))
+            elif operation_type == "NDWI":
+                temp.write(output.astype(rasterio.float32))
 
         self.logger.info(f'{output_path} -> image correctly written')
 
@@ -137,7 +151,8 @@ class NormalizedDifferenceIndex:
         ndviImage = self._load_image(self.ndvi_path)
 
         plot.show(ndviImage, ' ')
-        rasterio.plot.show_hist(ndviImage, bins=1000, masked=True, title=plot_name, ax=None)
+        rasterio.plot.show_hist(ndviImage, bins=1000,
+                                masked=True, title=plot_name, ax=None)
         ndviImage.close()
 
     def plot_ndwi_image(self):

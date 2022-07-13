@@ -162,7 +162,7 @@ class ManageRasterData:
                 i = i + 1
                 self.crop_raster(coordinates, original_image, cropped_path)
 
-    def parse_coordinates_from_shapefile(self, data_path, shapefile_name, images_path, raster_name, encoding_type):
+    def parse_coordinates_from_shapefile(self, shapefile_path, images_path, raster_name, encoding_type):
         """
         dado un shapefile con POLÍGONOS, toma sólo aquellos que estén contenidos por el raster del mismo sistema de coordenadas.
         @WIP
@@ -170,17 +170,16 @@ class ManageRasterData:
         definir cuándo se realiza éste proceso
         definir los errores -> uno que está corregido en una notebook es de fijarse de si todas las entradas del shp son válidas, xq a veces vienen corruptos
         """
-        shapefile_path = data_path + shapefile_name
         source = sf.Reader(shapefile_path, encoding=encoding_type)
 
         shape_type = source.shapeType
 
         shp = io.StringIO
 
-        destination = sf.Writer(data_path + 'custom_coordinates', shp=shp, shapeType=shape_type, encoding=encoding_type)
+        destination = sf.Writer(images_path + 'custom_coordinates', shp=shp, shapeType=shape_type, encoding=encoding_type)
         destination.fields = source.fields[1:]
 
-        raster = rasterio.open(images_path + raster_name)
+        raster = rasterio.open(raster_name)
         border_coordinates = raster.bounds
 
         x_bound_min = abs(border_coordinates[0])
@@ -206,25 +205,26 @@ class ManageRasterData:
 
         destination.close()
 
+        self.logger.info(f"{destination} -> custom coordinates correctly stored")
+
     # créditos
     def stats(self, geom, data, **mask_kw):
         masked, mask_transform = mask(dataset=data, shapes=(geom,), crop=True, all_touched=True, filled=True)
         return masked
 
     # lo que hace esta función es calcular el índice que se le indique, en cuadrantes según el .shp
-    def statistics_process(self, data_path, images_path, operation):
+    def statistics_process(self, images_path, operation):
         """
         función que culmina el procesamiento de las imágenes
         calcula valores estadísticos a partir de zonas en un determinado raster
         @WIP
         definir parámetros
-        definir si hacer dropna() acá o en el momento del análisis
         definir cuál va a ser la salida, si un shp o un csv. porque dependiendo de cómo se quieran mostrar los resultos conviene uno u otro
         (al csv se lo puede leer sólo con pandas, en cambio al shp se lo puede leer con geopandas y operar con las coordenadas de manera más transparante)
         """
         img_path = "{image_path}{operation}-MASKED.tif".format(image_path=images_path, operation=operation)
-        raster = rasterio.open(img_path)  # acá lo mismo que abajo, no debería
-        graticules = gpd.read_file(data_path + 'custom_coordinates.shp')
+        raster = rasterio.open(img_path)
+        graticules = gpd.read_file(images_path + 'custom_coordinates.shp')
 
         # acá tendría que calcularle según sea necesario, no solamente el ndvi -> arreglar asap
         graticules['mean'] = graticules.geometry.apply(self.stats, data=raster).apply(np.mean)
@@ -234,6 +234,7 @@ class ManageRasterData:
 
         #  abro el MISMO archivo que estaba leyendo con geopandas,
         # pero especificamente como shapefile para leer correctamente el objeto que representa los polígonos
+        # en realidad esto ya no haría falta porque estoy usando el shp directamente?
         shapefile_reader = sf.Reader(images_path + 'custom_coordinates.shp', encoding="ISO8859-1")
         polygon_coordinates = []
 
@@ -245,10 +246,18 @@ class ManageRasterData:
         graticules = graticules[["gid", "geometry", "mean", "median", "min_index", "max_index"]]
         graticules = graticules.dropna()
 
-        shp_path = "{data_path}{operation}-results.shp".format(data_path=data_path, operation=operation)
+        shp_path = "{data_path}{operation}-partial-results.shp".format(
+            data_path=images_path, operation=operation)
+
         graticules.to_file(shp_path)
 
-        return shp_path
+        self.logger.info(
+            f"{shp_path} -> processing *partial* results correctly stored")
+
+        results = self.calculate_status_with_threshold(
+            shp_path, images_path, operation)
+
+        return results
 
     def calculate_specifics_mask(self, src_path, final_path):
         """
@@ -256,10 +265,10 @@ class ManageRasterData:
         @WIP
         definir parámetros
         """
-        with fiona.open('/home/project/test_images/unzipped/MSIL1C_20220106.SAFE/GRANULE/MSIL1C_20220106/IMG_DATA/custom_buildings.shp', 'r') as shapefile:
+        with fiona.open('/home/project/Documents/Repositories/image-processor/areas_de_aguas_continentales_perenne/areas_de_aguas_continentales_perenne.shp', 'r') as shapefile:
             shapes = [feature["geometry"] for feature in shapefile]
 
-        with fiona.open('/home/project/test_images/unzipped/MSIL1C_20220106.SAFE/GRANULE/MSIL1C_20220106/IMG_DATA/custom_water.shp', 'r') as shapefile:
+        with fiona.open('/home/project/Documents/Repositories/image-processor/areas_de_asentamientos_y_edificios_020105/areas_de_asentamientos_y_edificios_020105.shp', 'r') as shapefile:
             shapes = [feature["geometry"] for feature in shapefile]
 
         with rasterio.open(src_path) as src:
@@ -273,3 +282,47 @@ class ManageRasterData:
 
         with rasterio.open(final_path, "w", **out_meta) as dest:
             dest.write(out_image)
+
+    def calculate_status_with_threshold(self, results_file, images_path, operation):
+        results = gpd.read_file(results_file)
+        status = []
+        print("operation" + operation)
+        if operation == "NDVI":
+            for mean in results['mean']:
+                if mean < 0:
+                    status.append("dead")
+                elif mean > 0 and mean <= 0.3:
+                    status.append("stressed")
+                elif mean > 0.3 and mean <= 0.7:
+                    status.append("barely_healthy")
+                elif mean > 0.7 and mean < 1:
+                    status.append("healthy")
+        elif operation == "NDWI":
+            for mean in results['mean']:
+                print(mean)
+                if mean < -0.1:
+                    status.append("regrowth")
+                elif mean > -0.1 and mean <= 0.1:
+                    status.append("unburned")
+                elif mean > 0.1 and mean <= 0.27:
+                    status.append("low_severity")
+                elif mean > 0.27 and mean < 0.66:
+                    status.append("moderate_severity")
+                elif mean > 0.66:
+                    status.append("high_severity")
+
+        results["status"] = status
+
+        results = results[["gid", "geometry", "mean", "status"]]
+
+        shp_path = "{data_path}{operation}-results.shp".format(
+            data_path=images_path, operation=operation)
+        results.to_file(shp_path)
+
+        csv_path = "{data_path}{operation}-results.csv".format(
+            data_path=images_path, operation=operation)
+        results.to_csv(csv_path)
+
+        self.logger.info(f"{shp_path} -> processing results correctly stored")
+
+        return shp_path
